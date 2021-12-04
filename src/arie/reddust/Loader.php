@@ -24,6 +24,5 @@ final class Loader extends PluginBase {
 
     protected function onEnable() : void {
         $this->getLogger()->info("Nothing here to see you silly!");
-
     }
 }
