@@ -140,6 +140,7 @@ class Hopper extends PmHopper {
         if ($this->transfer_cooldown != 0) $this->transfer_cooldown--;
         if ($this->transfer_cooldown == 0) {
             $this->push();
+            $this->pull();
         }
     }
 }
