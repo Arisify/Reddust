@@ -18,15 +18,29 @@ use pocketmine\math\Facing;
 
 use pocketmine\inventory\Inventory;
 use pocketmine\Server;
+
+use pocketmine\block\Block;
+use pocketmine\block\utils\BlockDataSerializer;
+use pocketmine\block\utils\InvalidBlockStateException;
+use pocketmine\block\utils\PoweredByRedstoneTrait;
+use pocketmine\item\Item;
+use pocketmine\math\AxisAlignedBB;
+use pocketmine\math\Vector3;
+use pocketmine\player\Player;
+use pocketmine\world\BlockTransaction;
+
 class Hopper extends PmHopper {
     /** @var int */
     public readonly int $transfer_cooldown = 0;
 
-    /** @var FurnaceRecipeManager */
-    private FurnaceRecipeManager $furnace_recipe_manager;
+    private FurnaceRecipeManager $furnac_recipe_manager;
 
-    public function __construct(FurnaceType $type){
-        $this->furnace_recipe_manager = Server::getInstance()->getCraftingManager()->getFurnaceRecipeManager($type);
+    public function place(BlockTransaction $tx, Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, ?Player $player = null) : bool{
+        $facing = $this->getContainerFacing();
+        if ($facing instanceof Furnace) {
+            $this->furnac_recipe_manager = Server::getInstance()->getCraftingManager()->getFurnaceRecipeManager($facing->getFurnaceType());
+        }
+        return parent::place($tx, $item, $blockReplace, $blockClicked, $face, $clickVector, $player);
     }
 
     public function getInventory() : ?HopperInventory{
@@ -40,45 +54,60 @@ class Hopper extends PmHopper {
     }
 
     public function getContainerFacing() : ?Container{
-        $facing = $this->position->getWorld()->getTile($this->position->getSide($this->facing));
+        $facing = $this->position->getWorld()->getTile($this->position->getSide($this->getFacing()));
         return $facing instanceof Container ? $facing->getInventory() : null;
     }
 
     protected function pull() : bool{
-        return true;
+        $above = $this->getContainerAbove();
+        $above_inventory = $above->getInventory();
+
+        if (empty($above_inventory->getContents())) return false;
+        foreach ($above_inventory->getContents() as $slot => $item) {
+            if ($this->getInventory()->canAddItem($item)) {
+                $above_inventory->setItem($slot, $item->pop());
+                $this->getInventory()->addItem($item->setCount(1));
+                return true;
+            }
+        }
+        return false;
     }
 
-    protected function push() : bool {
+    protected function push() {
         $facing = $this->getContainerFacing();
-        if ($facing instanceof Furnace) {
-            $face = $this->getFacing();
-            $facing_inventory = $facing->getInventory();
-            //assert($face != Facing::UP);
-            if ($face == Facing::DOWN) {
-                $smelting = $facing_inventory->getSmelting();
-                if ($smelting === null ? $this->furnace_recipe_manager->match($item) : $item->equals($smelting)) {
-                    $smelting = (new $item)->setCount(($smelting->getCount() ?? 0) + 1);
-                    $facing_inventory->setSmelting($smelting);
-                }
-            } else {
-                $fuel = $facing->getInventory()->getFuel();
-                if ($fuel->getCount() < $fuel->getMaxStackSize()) {
+        $facing_inventory = $facing->getInventory();
 
+        if (empty($this->getInventory()->getContents())) return;
+
+        foreach ($this->getInventory()->getContents() as $slot => $item) {
+            if ($facing_inventory->canAddItem($item)) {
+                if ($facing instanceof Furnace) {
+                    $face = $this->getFacing();
+                    //assert($face != Facing::UP);
+                    if ($face == Facing::DOWN) {
+                        $smelting = $facing_inventory->getSmelting();
+                        if ($smelting === null ? $this-> : $item->equals($smelting)) {
+                            $smelting = (new $item)->setCount(($smelting->getCount() ?? 0) + 1);
+                            $facing_inventory->setSmelting($smelting);
+                        }
+                    } else {
+                        $fuel = $facing->getInventory()->getFuel();
+                        if ($fuel->getCount() < $fuel->getMaxStackSize()) {
+
+                        }
+                    }
+
+                } else {
+                    $item = $this->getInventory()->getItem($slot);
+                    $this->getInventory()->setItem($slot, $item->pop());
+                    $facing_inventory->addItem($item->setCount(1));
                 }
             }
         }
-        $this->getInventory()->setItem($slot, $item);
-        return true;
+        return;
     }
 
     public function onScheduledUpdate(): void {
         parent::onScheduledUpdate();
-        $hopper_inventory = $this->getInventory();
-        $this->transfer_cooldown--;
-        if ($this->transfer_cooldown <= 0) {
-            /**if (!empty($hopper_inventory->getContents())) {
-            } else {
-            }*/
-        }
     }
 }
