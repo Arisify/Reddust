@@ -90,9 +90,9 @@ class Hopper extends PmHopper {
         $hopper_inventory = $this->getInventory();
         //if (empty($hopper_inventory->getContents())) return false;
 
-        for ($slot = 0; $slot < $hopper_inventory->geSize(); ++$slot) {
+        for ($slot = 0; $slot < $hopper_inventory->geTSize(); ++$slot) {
             $item = $hopper_inventory->getItem($slot);
-            if ($item instanceof Air) continue; //wwhy :C
+            if ($item instanceof Air) continue; //why :C
             if ($facing instanceof Furnace) {
                 if ($this->getFacing() == Facing::DOWN) {
                     $smelting = $facing_inventory->getSmelting();
