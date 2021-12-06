@@ -14,12 +14,11 @@ use pocketmine\block\tile\Container;
 use pocketmine\math\Facing;
 
 //use pocketmine\inventory\Inventory;
-use pocketmine\Server;
-
-use pocketmine\block\Block;
+//use pocketmine\Server;
+//use pocketmine\block\Block;
 //use pocketmine\block\utils\BlockDataSerializer;
 //use pocketmine\block\utils\InvalidBlockStateException;
-use pocketmine\item\Item;
+//use pocketmine\item\Item;
 //use pocketmine\math\AxisAlignedBB;
 
 class Hopper extends PmHopper {
@@ -38,7 +37,7 @@ class Hopper extends PmHopper {
 
     public function getContainerFacing() : ?Container{
         $facing = $this->position->getWorld()->getTile($this->position->getSide($this->getFacing()));
-        return $facing instanceof Container ? $facing->getInventory() : null;
+        return $facing instanceof Container && $facing != Facing::UP ? $facing->getInventory() : null;
     }
 
     protected function updateHopperTickers() : void{
@@ -86,33 +85,30 @@ class Hopper extends PmHopper {
         $facing = $this->getContainerFacing();
         $facing_inventory = $facing->getInventory();
         $hopper_inventory = $this->getInventory();
-        if (empty($hopper_inventory->getContents())) return false;
+        //if (empty($hopper_inventory->getContents())) return false;
 
         foreach ($hopper_inventory->getContents() as $slot => $item) {
             if ($facing instanceof Furnace) {
-                //assert($face != Facing::UP);
                 if ($this->getFacing() == Facing::DOWN) {
                     $smelting = $facing_inventory->getSmelting();
                     if ($smelting === null || $item->equals($smelting)) {
                         $facing_inventory->setSmelting((new $item)->setCount(($smelting->getCount() ?? 0) + 1));
-                        break;
                     }
                 } else {
                     $fuel = $facing->getInventory()->getFuel();
-                    if ($fuel->getCount() < $fuel->getMaxStackSize()) {
-                        if ($fuel !== null ? $item->getFuelTime() > 0 && $fuel->equals($item) : $item->getFuelTime() > 0) {
-                            $facing_inventory->setFuel((new $item)->setCount(($fuel->getCount() ?? 0) + 1));
-                            break;
-                        }
+                    if ($fuel !== null ? $item->equalsExact($fuel) && $fuel->getCount() < $fuel->getMaxStackSize() : $item->getFuelTime() > 0) {
+                        $facing_inventory->setFuel((new $item)->setCount(($fuel->getCount() ?? 0) + 1));
                     }
                 }
                 $hopper_inventory->setItem($slot, $item->pop());
+                return true;
             } else if ($facing_inventory->canAddItem($item)) {
                     $item = $hopper_inventory->getItem($slot);
                     $hopper_inventory->setItem($slot, $item->pop());
                     $facing_inventory->addItem($item->setCount(1));
             }
         }
+        return false;
     }
 
     public function onScheduledUpdate(): void {
