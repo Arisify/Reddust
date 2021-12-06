@@ -8,11 +8,6 @@ use pocketmine\block\tile\Furnace;
 
 use pocketmine\block\tile\Container;
 
-
-//use pocketmine\block\inventory\FurnaceInventory;
-use pocketmine\crafting\FurnaceRecipeManager;
-use pocketmine\crafting\FurnaceType;
-
 //use pocketmine\block\tile\Tile;
 use pocketmine\math\Facing;
 
@@ -22,12 +17,8 @@ use pocketmine\Server;
 use pocketmine\block\Block;
 //use pocketmine\block\utils\BlockDataSerializer;
 //use pocketmine\block\utils\InvalidBlockStateException;
-//use pocketmine\block\utils\PoweredByRedstoneTrait;
 use pocketmine\item\Item;
 //use pocketmine\math\AxisAlignedBB;
-use pocketmine\math\Vector3;
-use pocketmine\player\Player;
-use pocketmine\world\BlockTransaction;
 
 class Hopper extends PmHopper {
     /** @var int */
@@ -111,16 +102,17 @@ class Hopper extends PmHopper {
                 if ($this->getFacing() == Facing::DOWN) {
                     $smelting = $facing_inventory->getSmelting();
                     if ($smelting === null ? $this->furnace_recipe_manager->match($item) : $item->equals($smelting)) {
-                        $smelting = (new $item)->setCount(($smelting->getCount() ?? 0) + 1);
-                        $facing_inventory->setSmelting($smelting);
-                        return true;
+                        $facing_inventory->setSmelting((new $item)->setCount(($smelting->getCount() ?? 0) + 1));
                     }
                 } else {
                     $fuel = $facing->getInventory()->getFuel();
                     if ($fuel->getCount() < $fuel->getMaxStackSize()) {
-                        return true;
+                        if ($fuel !== null ? $item->getFuelTime() > 0 && $fuel->equals($item) : $item->getFuelTime() > 0) {
+                            $facing_inventory->setFuel((new $item)->setCount(($fuel->getCount() ?? 0) + 1));
+                        }
                     }
                 }
+                $hopper_inventory->setItem($slot, $item->pop());
             } else {
                 if ($facing_inventory->canAddItem($item)) {
                     $item = $hopper_inventory->getItem($slot);
