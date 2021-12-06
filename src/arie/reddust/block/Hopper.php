@@ -71,7 +71,6 @@ class Hopper extends PmHopper {
         $above = $this->getContainerAbove();
         $above_inventory = $above->getInventory();
 
-        //if (empty($above_inventory->getContents())) return false;
         for ($slot = 0; $slot < $above_inventory->getSize(); ++$slot) {
             $item = $above_inventory->getItem($slot);
             if ($item instanceof Air) continue;
@@ -88,7 +87,6 @@ class Hopper extends PmHopper {
         $facing = $this->getContainerFacing();
         $facing_inventory = $facing->getInventory();
         $hopper_inventory = $this->getInventory();
-        //if (empty($hopper_inventory->getContents())) return false;
 
         for ($slot = 0; $slot < $hopper_inventory->geTSize(); ++$slot) {
             $item = $hopper_inventory->getItem($slot);
@@ -96,7 +94,7 @@ class Hopper extends PmHopper {
             if ($facing instanceof Furnace) {
                 if ($this->getFacing() == Facing::DOWN) {
                     $smelting = $facing_inventory->getSmelting();
-                    if ($smelting === null || $item?->equalsExact($smelting) ?? false) { //Seems like $smelting is null is not really necessary.
+                    if ($smelting === null || $item->equalsExact($smelting) ?? false) { //Seems like $smelting is null is not really necessary.
                         $facing_inventory->setSmelting((new $item)->setCount(($smelting->getCount() ?? 0) + 1));
                     }
                 } else {
