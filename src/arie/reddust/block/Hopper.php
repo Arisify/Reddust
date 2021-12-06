@@ -6,25 +6,12 @@ namespace arie\reddust\block;
 use pocketmine\block\Air;
 use pocketmine\block\Hopper as PmHopper;
 use pocketmine\block\inventory\HopperInventory;
+use pocketmine\block\tile\Container;
 use pocketmine\block\tile\Hopper as PmHopperTile;
 use pocketmine\block\tile\Furnace;
-
-use pocketmine\block\tile\Container;
-
-//use pocketmine\block\tile\Tile;
 use pocketmine\math\Facing;
 
-//use pocketmine\inventory\Inventory;
-//use pocketmine\Server;
-//use pocketmine\block\Block;
-//use pocketmine\block\utils\BlockDataSerializer;
-//use pocketmine\block\utils\InvalidBlockStateException;
-//use pocketmine\item\Item;
-//use pocketmine\math\AxisAlignedBB;
-
 class Hopper extends PmHopper {
-    /** @var int */
-    public readonly int $transfer_cooldown = 0;
 
     public function getInventory() : ?HopperInventory{
         $tile = $this->position->getWorld()->getTile($this->position);
@@ -62,9 +49,7 @@ class Hopper extends PmHopper {
     }
 
     public function rescheduleTransferCooldown() : void {
-        if ($this->transfer_cooldown < 0) {
-            $this->transfer_cooldown = 0;
-        }
+        $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 8);
     }
 
     protected function pull() : bool{
@@ -116,10 +101,21 @@ class Hopper extends PmHopper {
 
     public function onScheduledUpdate(): void {
         parent::onScheduledUpdate();
-        if ($this->transfer_cooldown != 0) $this->transfer_cooldown--;
-        if ($this->transfer_cooldown == 0) {
-            $this->push();
-            $this->pull();
+        if ($this->isPowered()) return;
+        if ($this->getInventory() !== null){
+            $facing = $this->getContainerFacing();
+            if ($facing != null) {
+                assert($facing instanceof Container);
+                $this->push();
+            }
+            $above = $this->getContainerAbove();
+            if ($above !== null) {
+                assert($above instanceof Container);
+                $this->pull();
+            }
+        }
+        if ($this->canRescheduleTransferCooldown()) {
+            $this->rescheduleTransferCooldown();
         }
     }
 }
