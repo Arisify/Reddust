@@ -24,16 +24,6 @@ class Hopper extends PmHopper {
     /** @var int */
     public readonly int $transfer_cooldown = 0;
 
-    //private FurnaceRecipeManager $furnace_recipe_manager;
-
-    /*public function place(BlockTransaction $tx, Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, ?Player $player = null) : bool{
-        $facing = $this->getContainerFacing();
-        if ($facing instanceof Furnace) {
-            $this->furnace_recipe_manager = Server::getInstance()->getCraftingManager()->getFurnaceRecipeManager($facing->getFurnaceType());
-        }
-        return parent::place($tx, $item, $blockReplace, $blockClicked, $face, $clickVector, $player);
-    }*/
-
     public function getInventory() : ?HopperInventory{
         $tile = $this->position->getWorld()->getTile($this->position);
         return $tile instanceof PmHopperTile ? $tile->getInventory() : null;
@@ -101,8 +91,9 @@ class Hopper extends PmHopper {
                 //assert($face != Facing::UP);
                 if ($this->getFacing() == Facing::DOWN) {
                     $smelting = $facing_inventory->getSmelting();
-                    if ($smelting === null ? $this->furnace_recipe_manager->match($item) : $item->equals($smelting)) {
+                    if ($smelting === null || $item->equals($smelting)) {
                         $facing_inventory->setSmelting((new $item)->setCount(($smelting->getCount() ?? 0) + 1));
+                        break;
                     }
                 } else {
                     $fuel = $facing->getInventory()->getFuel();
@@ -113,12 +104,10 @@ class Hopper extends PmHopper {
                     }
                 }
                 $hopper_inventory->setItem($slot, $item->pop());
-            } else {
-                if ($facing_inventory->canAddItem($item)) {
+            } else if ($facing_inventory->canAddItem($item)) {
                     $item = $hopper_inventory->getItem($slot);
                     $hopper_inventory->setItem($slot, $item->pop());
                     $facing_inventory->addItem($item->setCount(1));
-                }
             }
         }
     }
