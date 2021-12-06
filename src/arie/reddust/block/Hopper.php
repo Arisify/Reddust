@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace arie\reddust\block;
 
+use pocketmine\block\Air;
 use pocketmine\block\Hopper as PmHopper;
 use pocketmine\block\inventory\HopperInventory;
 use pocketmine\block\tile\Hopper as PmHopperTile;
@@ -70,8 +71,10 @@ class Hopper extends PmHopper {
         $above = $this->getContainerAbove();
         $above_inventory = $above->getInventory();
 
-        if (empty($above_inventory->getContents())) return false;
-        foreach ($above_inventory->getContents() as $slot => $item) {
+        //if (empty($above_inventory->getContents())) return false;
+        for ($slot = 0; $slot < $above_inventory->getSize(); ++$slot) {
+            $item = $above_inventory->getItem($slot);
+            if ($item instanceof Air) continue;
             if ($this->getInventory()->canAddItem($item)) {
                 $above_inventory->setItem($slot, $item->pop());
                 $this->getInventory()->addItem($item->setCount(1));
@@ -87,11 +90,13 @@ class Hopper extends PmHopper {
         $hopper_inventory = $this->getInventory();
         //if (empty($hopper_inventory->getContents())) return false;
 
-        foreach ($hopper_inventory->getContents() as $slot => $item) {
+        for ($slot = 0; $slot < $hopper_inventory->geSize(); ++$slot) {
+            $item = $hopper_inventory->getItem($slot);
+            if ($item instanceof Air) continue; //wwhy :C
             if ($facing instanceof Furnace) {
                 if ($this->getFacing() == Facing::DOWN) {
                     $smelting = $facing_inventory->getSmelting();
-                    if ($smelting === null || $item->equalsExact($smelting)) { //Seems like $smelting is null is not really necessary.
+                    if ($smelting === null || $item?->equalsExact($smelting) ?? false) { //Seems like $smelting is null is not really necessary.
                         $facing_inventory->setSmelting((new $item)->setCount(($smelting->getCount() ?? 0) + 1));
                     }
                 } else {
