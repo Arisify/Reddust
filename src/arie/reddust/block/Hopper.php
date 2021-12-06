@@ -91,7 +91,7 @@ class Hopper extends PmHopper {
             if ($facing instanceof Furnace) {
                 if ($this->getFacing() == Facing::DOWN) {
                     $smelting = $facing_inventory->getSmelting();
-                    if ($smelting === null || $item->equals($smelting)) {
+                    if ($smelting === null || $item->equalsExact($smelting)) { //Seems like $smelting is null is not really necessary.
                         $facing_inventory->setSmelting((new $item)->setCount(($smelting->getCount() ?? 0) + 1));
                     }
                 } else {
@@ -103,9 +103,9 @@ class Hopper extends PmHopper {
                 $hopper_inventory->setItem($slot, $item->pop());
                 return true;
             } else if ($facing_inventory->canAddItem($item)) {
-                    $item = $hopper_inventory->getItem($slot);
-                    $hopper_inventory->setItem($slot, $item->pop());
-                    $facing_inventory->addItem($item->setCount(1));
+                $item = $hopper_inventory->getItem($slot);
+                $hopper_inventory->setItem($slot, $item->pop());
+                $facing_inventory->addItem($item->setCount(1));
             }
         }
         return false;
