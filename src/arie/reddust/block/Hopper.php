@@ -3,12 +3,11 @@ declare(strict_types=1);
 
 namespace arie\reddust\block;
 
-use pocketmine\block\Air;
 use pocketmine\block\Hopper as PmHopper;
 use pocketmine\block\inventory\HopperInventory;
 use pocketmine\block\tile\Container;
-use pocketmine\block\tile\Hopper as PmHopperTile;
 use pocketmine\block\tile\Furnace;
+use pocketmine\block\tile\Hopper as PmHopperTile;
 use pocketmine\math\Facing;
 
 class Hopper extends PmHopper {
@@ -25,7 +24,7 @@ class Hopper extends PmHopper {
 
     public function getContainerFacing() : ?Container{
         $facing = $this->position->getWorld()->getTile($this->position->getSide($this->getFacing()));
-        return $facing instanceof Container && $facing != Facing::UP ? $facing->getInventory() : null;
+        return $facing instanceof Container && $this->getFacing() != Facing::UP ? $facing : null;
     }
 
     protected function updateHopperTickers() : void{
@@ -41,6 +40,7 @@ class Hopper extends PmHopper {
 
     public function onNearbyBlockChange() : void{
         parent::onNearbyBlockChange();
+
         $this->updateHopperTickers();
     }
 
@@ -58,10 +58,10 @@ class Hopper extends PmHopper {
 
         for ($slot = 0; $slot < $above_inventory->getSize(); ++$slot) {
             $item = $above_inventory->getItem($slot);
-            if ($item instanceof Air) continue;
+            if ($item->isNull()) continue;
             if ($this->getInventory()->canAddItem($item)) {
-                $above_inventory->setItem($slot, $item->pop());
-                $this->getInventory()->addItem($item->setCount(1));
+                $this->getInventory()->addItem($item->pop());
+                $above_inventory->setItem($slot, $item);
                 return true;
             }
         }
@@ -75,26 +75,24 @@ class Hopper extends PmHopper {
 
         for ($slot = 0; $slot < $hopper_inventory->geTSize(); ++$slot) {
             $item = $hopper_inventory->getItem($slot);
-            if ($item instanceof Air) continue; //why :C
+            if ($item->isNull()) continue; //why :C
             if ($facing instanceof Furnace) {
                 if ($this->getFacing() == Facing::DOWN) {
                     $smelting = $facing_inventory->getSmelting();
-                    if ($smelting === null || $item->equalsExact($smelting) ?? false) { //Seems like $smelting is null is not really necessary.
-                        $facing_inventory->setSmelting((new $item)->setCount(($smelting->getCount() ?? 0) + 1));
+                    if ($smelting === null || $item->equals($smelting)) { //Seems like $smelting is null is not really necessary.
+                        $facing_inventory->setSmelting((clone $item)->setCount(($smelting->getCount() ?? 0) + 1));
                     }
                 } else {
                     $fuel = $facing->getInventory()->getFuel();
-                    if ($fuel !== null ? $item->equalsExact($fuel) && $fuel->getCount() < $fuel->getMaxStackSize() : $item->getFuelTime() > 0) {
-                        $facing_inventory->setFuel((new $item)->setCount(($fuel->getCount() ?? 0) + 1));
+                    if ($fuel !== null ? $item->equals($fuel) && $fuel->getCount() < $fuel->getMaxStackSize() : $item->getFuelTime() > 0) {
+                        $facing_inventory->setFuel((clone $item)->setCount(($fuel->getCount() ?? 0) + 1));
                     }
                 }
-                $hopper_inventory->setItem($slot, $item->pop());
-                return true;
             } else if ($facing_inventory->canAddItem($item)) {
-                $item = $hopper_inventory->getItem($slot);
-                $hopper_inventory->setItem($slot, $item->pop());
-                $facing_inventory->addItem($item->setCount(1));
+                $facing_inventory->addItem($item->pop());
             }
+            $hopper_inventory->setItem($slot, $item);
+            return true;
         }
         return false;
     }

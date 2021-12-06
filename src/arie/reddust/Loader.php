@@ -10,12 +10,16 @@ use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\TextFormat;
 
+use arie\reddust\block\Hopper;
+
 final class Loader extends PluginBase {
 
     private static self $instance;
 
     protected function onLoad() : void {
         self::$instance = $this;
+        $hopper = VanillaBlocks::HOPPER();
+        BlockFactory::getInstance()->register(new Hopper($hopper->getIdInfo(), $hopper->getName(), $hopper->getBreakInfo()), true);
     }
 
     public static function getInstance() : self {
