@@ -58,11 +58,12 @@ class Hopper extends PmHopper {
 
         if ($above instanceof Furnace) {
             $item = $above_inventory->getResult();
-            if ($this->getInventory()->canAddItem($item)) {
+            if ((!$item->isNull()) && $this->getInventory()->canAddItem($item)) {
                 $this->getInventory()->addItem($item->pop());
                 $above_inventory->setResult($item);
                 return true;
             }
+            return false;
         }
 
         for ($slot = 0; $slot < $above_inventory->getSize(); ++$slot) {
@@ -88,20 +89,24 @@ class Hopper extends PmHopper {
             if ($facing instanceof Furnace) {
                 if ($this->getFacing() == Facing::DOWN) {
                     $smelting = $facing_inventory->getSmelting();
-                    if ($smelting === null || $item->equals($smelting)) { //Seems like $smelting is null is not really necessary.
+                    if (!$smelting->isNull() ? $item->equals($smelting) && $smelting->getCount() < $smelting->getMaxStackSize() : true) { //Seems like $smelting is null is not really necessary.
                         $facing_inventory->setSmelting((clone $item)->setCount(($smelting->getCount() ?? 0) + 1));
+                        $hopper_inventory->setItem($slot, $item->setCount($item->getCount() - 1));
+                        return true;
                     }
                 } else {
                     $fuel = $facing->getInventory()->getFuel();
-                    if ($fuel !== null ? $item->equals($fuel) && $fuel->getCount() < $fuel->getMaxStackSize() : $item->getFuelTime() > 0) {
+                    if (!$fuel->isNull() ? $item->equals($fuel) && $fuel->getCount() < $fuel->getMaxStackSize() : $item->getFuelTime() > 0) {
                         $facing_inventory->setFuel((clone $item)->setCount(($fuel->getCount() ?? 0) + 1));
+                        $hopper_inventory->setItem($slot, $item->setCount($item->getCount() - 1));
+                        return true;
                     }
                 }
-            } else if ($facing_inventory->canAddItem($item)) {
+            } else if (!$facing instanceof PmHopperTile && $facing_inventory->canAddItem($item)) {
                 $facing_inventory->addItem($item->pop());
+                $hopper_inventory->setItem($slot, $item);
+                return true;
             }
-            $hopper_inventory->setItem($slot, $item);
-            return true;
         }
         return false;
     }
@@ -121,8 +126,6 @@ class Hopper extends PmHopper {
                 $this->pull();
             }
         }
-        if ($this->canRescheduleTransferCooldown()) {
-            $this->rescheduleTransferCooldown();
-        }
+        $this->updateHopperTickers();
     }
 }
