@@ -56,6 +56,15 @@ class Hopper extends PmHopper {
         $above = $this->getContainerAbove();
         $above_inventory = $above->getInventory();
 
+        if ($above instanceof Furnace) {
+            $item = $above_inventory->getResult();
+            if ($this->getInventory()->canAddItem($item)) {
+                $this->getInventory()->addItem($item->pop());
+                $above_inventory->setResult($item);
+                return true;
+            }
+        }
+
         for ($slot = 0; $slot < $above_inventory->getSize(); ++$slot) {
             $item = $above_inventory->getItem($slot);
             if ($item->isNull()) continue;
