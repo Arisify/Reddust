@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+namespace arie\reddust\block;
+
 use pocketmine\block\Hopper as PmHopper;
 use pocketmine\block\inventory\HopperInventory;
 use pocketmine\block\tile\Hopper as PmHopperTile;
@@ -84,7 +86,7 @@ class Hopper extends PmHopper {
         $facing = $this->getContainerFacing();
         $facing_inventory = $facing->getInventory();
         $hopper_inventory = $this->getInventory();
-        if (empty($hopper_inventory->getContents())) return;
+        if (empty($hopper_inventory->getContents())) return false;
 
         foreach ($hopper_inventory->getContents() as $slot => $item) {
             if ($facing instanceof Furnace) {
@@ -100,6 +102,7 @@ class Hopper extends PmHopper {
                     if ($fuel->getCount() < $fuel->getMaxStackSize()) {
                         if ($fuel !== null ? $item->getFuelTime() > 0 && $fuel->equals($item) : $item->getFuelTime() > 0) {
                             $facing_inventory->setFuel((new $item)->setCount(($fuel->getCount() ?? 0) + 1));
+                            break;
                         }
                     }
                 }
