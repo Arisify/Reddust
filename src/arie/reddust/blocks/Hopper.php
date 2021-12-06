@@ -33,7 +33,7 @@ class Hopper extends PmHopper {
     /** @var int */
     public readonly int $transfer_cooldown = 0;
 
-    private FurnaceRecipeManager $furnace_recipe_manager;
+    //private FurnaceRecipeManager $furnace_recipe_manager;
 
     /*public function place(BlockTransaction $tx, Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, ?Player $player = null) : bool{
         $facing = $this->getContainerFacing();
@@ -106,24 +106,23 @@ class Hopper extends PmHopper {
         if (empty($hopper_inventory->getContents())) return;
 
         foreach ($hopper_inventory->getContents() as $slot => $item) {
-            if ($facing_inventory->canAddItem($item)) {
-                if ($facing instanceof Furnace) {
-                    $face = $this->getFacing();
-                    //assert($face != Facing::UP);
-                    if ($face == Facing::DOWN) {
-                        $smelting = $facing_inventory->getSmelting();
-                        if ($smelting === null ? $this->furnace_recipe_manager->match($item) : $item->equals($smelting)) {
-                            $smelting = (new $item)->setCount(($smelting->getCount() ?? 0) + 1);
-                            $facing_inventory->setSmelting($smelting);
-                        }
-                    } else {
-                        $fuel = $facing->getInventory()->getFuel();
-                        if ($fuel->getCount() < $fuel->getMaxStackSize()) {
-                            print("Todo");
-                        }
+            if ($facing instanceof Furnace) {
+                $face = $this->getFacing();
+                //assert($face != Facing::UP);
+                if ($face == Facing::DOWN) {
+                    $smelting = $facing_inventory->getSmelting();
+                    if ($smelting === null ? $this->furnace_recipe_manager->match($item) : $item->equals($smelting)) {
+                        $smelting = (new $item)->setCount(($smelting->getCount() ?? 0) + 1);
+                        $facing_inventory->setSmelting($smelting);
                     }
-
                 } else {
+                    $fuel = $facing->getInventory()->getFuel();
+                    if ($fuel->getCount() < $fuel->getMaxStackSize()) {
+
+                    }
+                }
+            } else {
+                if ($facing_inventory->canAddItem($item)) {
                     $item = $hopper_inventory->getItem($slot);
                     $hopper_inventory->setItem($slot, $item->pop());
                     $facing_inventory->addItem($item->setCount(1));
