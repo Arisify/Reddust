@@ -35,13 +35,13 @@ class Hopper extends PmHopper {
 
     private FurnaceRecipeManager $furnace_recipe_manager;
 
-    public function place(BlockTransaction $tx, Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, ?Player $player = null) : bool{
+    /*public function place(BlockTransaction $tx, Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, ?Player $player = null) : bool{
         $facing = $this->getContainerFacing();
         if ($facing instanceof Furnace) {
             $this->furnace_recipe_manager = Server::getInstance()->getCraftingManager()->getFurnaceRecipeManager($facing->getFurnaceType());
         }
         return parent::place($tx, $item, $blockReplace, $blockClicked, $face, $clickVector, $player);
-    }
+    }*/
 
     public function getInventory() : ?HopperInventory{
         $tile = $this->position->getWorld()->getTile($this->position);
@@ -81,9 +81,7 @@ class Hopper extends PmHopper {
     public function rescheduleTransferCooldown() : void {
         if ($this->transfer_cooldown < 0) {
             $this->transfer_cooldown = 0;
-            return;
         }
-
     }
 
     protected function pull() : bool{
@@ -104,10 +102,10 @@ class Hopper extends PmHopper {
     protected function push() {
         $facing = $this->getContainerFacing();
         $facing_inventory = $facing->getInventory();
+        $hopper_inventory = $this->getInventory();
+        if (empty($hopper_inventory->getContents())) return;
 
-        if (empty($this->getInventory()->getContents())) return;
-
-        foreach ($this->getInventory()->getContents() as $slot => $item) {
+        foreach ($hopper_inventory->getContents() as $slot => $item) {
             if ($facing_inventory->canAddItem($item)) {
                 if ($facing instanceof Furnace) {
                     $face = $this->getFacing();
@@ -126,13 +124,12 @@ class Hopper extends PmHopper {
                     }
 
                 } else {
-                    $item = $this->getInventory()->getItem($slot);
-                    $this->getInventory()->setItem($slot, $item->pop());
+                    $item = $hopper_inventory->getItem($slot);
+                    $hopper_inventory->setItem($slot, $item->pop());
                     $facing_inventory->addItem($item->setCount(1));
                 }
             }
         }
-        return;
     }
 
     public function onScheduledUpdate(): void {
