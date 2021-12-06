@@ -99,7 +99,7 @@ class Hopper extends PmHopper {
         return false;
     }
 
-    protected function push() {
+    protected function push() : bool{
         $facing = $this->getContainerFacing();
         $facing_inventory = $facing->getInventory();
         $hopper_inventory = $this->getInventory();
@@ -107,18 +107,18 @@ class Hopper extends PmHopper {
 
         foreach ($hopper_inventory->getContents() as $slot => $item) {
             if ($facing instanceof Furnace) {
-                $face = $this->getFacing();
                 //assert($face != Facing::UP);
-                if ($face == Facing::DOWN) {
+                if ($this->getFacing() == Facing::DOWN) {
                     $smelting = $facing_inventory->getSmelting();
                     if ($smelting === null ? $this->furnace_recipe_manager->match($item) : $item->equals($smelting)) {
                         $smelting = (new $item)->setCount(($smelting->getCount() ?? 0) + 1);
                         $facing_inventory->setSmelting($smelting);
+                        return true;
                     }
                 } else {
                     $fuel = $facing->getInventory()->getFuel();
                     if ($fuel->getCount() < $fuel->getMaxStackSize()) {
-
+                        return true;
                     }
                 }
             } else {
