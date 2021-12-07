@@ -40,7 +40,6 @@ class Hopper extends PmHopper {
 
     public function onNearbyBlockChange() : void{
         parent::onNearbyBlockChange();
-
         $this->updateHopperTickers();
     }
 
@@ -89,7 +88,7 @@ class Hopper extends PmHopper {
             if ($facing instanceof Furnace) {
                 if ($this->getFacing() == Facing::DOWN) {
                     $smelting = $facing_inventory->getSmelting();
-                    if (!$smelting->isNull() ? $item->equals($smelting) && $smelting->getCount() < $smelting->getMaxStackSize() : true) { //Seems like $smelting is null is not really necessary.
+                    if ($smelting->isNull() || $item->equals($smelting) && $smelting->getCount() < $smelting->getMaxStackSize()) { //Seems like $smelting is null is not really necessary.
                         $facing_inventory->setSmelting((clone $item)->setCount(($smelting->getCount() ?? 0) + 1));
                         $hopper_inventory->setItem($slot, $item->setCount($item->getCount() - 1));
                         return true;

@@ -11,10 +11,15 @@ use pocketmine\plugin\PluginBase;
 use pocketmine\utils\TextFormat;
 
 use arie\reddust\block\Hopper;
+use arie\reddust\listener\ItemEntityListener;
 
 final class Loader extends PluginBase {
 
     private static self $instance;
+
+
+    /** @var ItemEntityListener */
+    private $item_entity_listener;
 
     protected function onLoad() : void {
         self::$instance = $this;
@@ -28,5 +33,6 @@ final class Loader extends PluginBase {
 
     protected function onEnable() : void {
         $this->getLogger()->info("Nothing here to see you silly!");
+        $this->item_entity_listener = new ItemEntityListener($this);
     }
 }
