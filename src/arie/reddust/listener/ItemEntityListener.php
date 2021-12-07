@@ -75,7 +75,8 @@ final class ItemEntityListener implements Listener{
     }
 
     public function deregisterItemEntity(ItemEntity $entity) {
-        if (isset($this->entities[$id = $entity->getId()])) {
+        $id = $entity->getId();
+        if (isset($this->entities[$id])) {
             unset($this->entities[$id]);
             if ($this->ticker !== null && count($this->entities) === 0) {
                 $this->ticker->cancel();

@@ -12,10 +12,5 @@ use pocketmine\player\Player;
 use pocketmine\world\BlockTransaction;
 
 class RedstoneTorch extends PmRedstoneTorch {
-    //use PoweredByRedstoneTrait;
-
-    public function place(BlockTransaction $tx, Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, ?Player $player = null): bool {
-
-        return parent::place($tx, $item, $blockReplace, $blockClicked, $face, $clickVector, $player);
-    }
+    //to-do
 }
