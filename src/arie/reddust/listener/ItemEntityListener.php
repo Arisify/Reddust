@@ -1,20 +1,21 @@
 <?php
 declare(strict_types=1);
-
 namespace arie\reddust\listener;
 
 use pocketmine\block\tile\Hopper as PmHopperTile;
 use pocketmine\entity\object\ItemEntity;
 use pocketmine\event\entity\ItemDespawnEvent;
 use pocketmine\event\entity\ItemSpawnEvent;
-
 use pocketmine\event\Listener;
-//use pocketmine\world\World;
-
-use arie\reddust\Loader;
 use pocketmine\world\Position;
+use pocketmine\world\World;
 
-//use arie\reddust\block\Hopper;
+use arie\reddust\block\Hopper;
+use arie\reddust\Loader;
+
+use muqsit\asynciterator\AsyncIterator;
+use muqsit\asynciterator\handler\AsyncForeachHandler;
+use muqsit\asynciterator\handler\AsyncForeachResult;
 
 final class ItemEntityListener implements Listener{
     private $entities = [];
@@ -22,6 +23,8 @@ final class ItemEntityListener implements Listener{
     public function __construct(
         private Loader $plugin,
     ) {
+
+        $this->async_iterator = new AsyncIterator($plugin->getScheduler());
         $this->plugin->getServer()->getPluginManager()->registerEvents($this, $plugin);
         foreach ($this->plugin->getServer()->getWorldManager()->getWorlds() as $world) {
             foreach ($world->getEntities() as $entity) {
