@@ -11,7 +11,7 @@ use pocketmine\plugin\PluginBase;
 use pocketmine\utils\TextFormat;
 
 use arie\reddust\block\Hopper;
-use arie\reddust\listener\ItemEntityListener;
+use arie\reddust\item\ItemEntityListener;
 
 final class Loader extends PluginBase {
 
@@ -19,7 +19,7 @@ final class Loader extends PluginBase {
 
 
     /** @var ItemEntityListener */
-    private $item_entity_listener;
+    private ItemEntityListener $item_entity_listener;
 
     protected function onLoad() : void {
         self::$instance = $this;

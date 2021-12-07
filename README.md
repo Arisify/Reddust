@@ -1,5 +1,6 @@
 # Reddust
-### In development
+### In development 
+[![CodeFactor](https://www.codefactor.io/repository/github/ntt1906/reddust/badge)](https://www.codefactor.io/repository/github/ntt1906/reddust)
 
 An attempt to add bedrock redstone system to pmmp for api 4.0.0
 

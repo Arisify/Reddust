@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-namespace arie\reddust\listener;
+namespace arie\reddust\item;
 
 use pocketmine\block\tile\Hopper as PmHopperTile;
 use pocketmine\entity\object\ItemEntity;
@@ -22,7 +22,7 @@ final class ItemEntityListener implements Listener{
     private AsyncIterator $async_iterator;
 
     /** @var AsyncForeachHandler<int, ItemEntity>|null */
-    private ?AsyncForeachHandler $ticker;
+    private ?AsyncForeachHandler $ticker = null;
 
     private array $entities = [];
 
@@ -69,7 +69,7 @@ final class ItemEntityListener implements Listener{
 
     public function registerItemEntity(ItemEntity $entity) : void{
         if (!$entity->isClosed() && !$entity->isFlaggedForDespawn()) {
-            $this->entities[$entity->getId()] = $entity;
+            $this->entities[$entity->getId()] = new ItemEntityMovementNotifier($entity, $this);
             if ($this->ticker === null) $this->tick();
         }
     }
@@ -106,10 +106,8 @@ final class ItemEntityListener implements Listener{
         if($this->ticker !== null){
             throw new LogicException("Tried scheduling multiple item entity tickers");
         }
-        $this->ticker = $this->async_iterator->forEach(new ArrayIterator($this->entities), 1, 4)->as(static function(int $id, ItemEntity $entity) : AsyncForeachResult{
-            if(!$entity->isClosed() && !$entity->isFlaggedForDespawn()){
-                $this->onItemEntityMove($entity);
-            }
+        $this->ticker = $this->async_iterator->forEach(new ArrayIterator($this->entities), 1, 4)->as(static function(int $id, ItemEntityMovementNotifier $notifier) : AsyncForeachResult{
+            $notifier->update();
             return AsyncForeachResult::CONTINUE();
         })->onCompletion(function() : void{
             $this->ticker = null;
