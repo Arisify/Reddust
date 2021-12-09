@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace arie\reddust\item;
 
 use pocketmine\entity\object\ItemEntity;
-use pocketmine\world\Position;
 
 final class ItemEntityMovementNotifier{
 
@@ -15,7 +14,7 @@ final class ItemEntityMovementNotifier{
         $this->check();
     }
 
-    public function check() {
+    public function check() : void{
         $this->listener->onItemEntityMove($this->entity);
     }
 

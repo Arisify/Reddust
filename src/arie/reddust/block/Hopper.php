@@ -8,7 +8,9 @@ use pocketmine\block\inventory\HopperInventory;
 use pocketmine\block\tile\Container;
 use pocketmine\block\tile\Furnace;
 use pocketmine\block\tile\Hopper as PmHopperTile;
+use pocketmine\item\Item;
 use pocketmine\math\Facing;
+use pocketmine\player\Player;
 
 class Hopper extends PmHopper {
 
@@ -24,7 +26,7 @@ class Hopper extends PmHopper {
 
     public function getContainerFacing() : ?Container{
         $facing = $this->position->getWorld()->getTile($this->position->getSide($this->getFacing()));
-        return $facing instanceof Container && $this->getFacing() != Facing::UP ? $facing : null;
+        return ($facing instanceof Container && $this->getFacing() != Facing::UP) ? $facing : null;
     }
 
     protected function updateHopperTickers() : void{
@@ -50,6 +52,17 @@ class Hopper extends PmHopper {
     public function rescheduleTransferCooldown() : void {
         $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 8);
     }
+
+    /**public function onBreak(Item $item, ?Player $player = null): bool {
+        if (empty($this->getInventory()?->getContents())) {
+
+        }
+        return parent::onBreak($item, $player);
+    }
+
+    public function getDrops(Item $item): array{
+        parent::getDrops();
+    }*/
 
     protected function pull() : bool{
         $above = $this->getContainerAbove();
@@ -88,7 +101,7 @@ class Hopper extends PmHopper {
             if ($facing instanceof Furnace) {
                 if ($this->getFacing() == Facing::DOWN) {
                     $smelting = $facing_inventory->getSmelting();
-                    if ($smelting->isNull() || $item->equals($smelting) && $smelting->getCount() < $smelting->getMaxStackSize()) { //Seems like $smelting is null is not really necessary.
+                    if ($smelting->isNull() || ($item->equals($smelting) && $smelting->getCount() < $smelting->getMaxStackSize())) { //Seems like $smelting is null is not really necessary.
                         $facing_inventory->setSmelting((clone $item)->setCount(($smelting->getCount() ?? 0) + 1));
                         $hopper_inventory->setItem($slot, $item->setCount($item->getCount() - 1));
                         return true;

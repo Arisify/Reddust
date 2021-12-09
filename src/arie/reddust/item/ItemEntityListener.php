@@ -41,15 +41,16 @@ final class ItemEntityListener implements Listener{
         }
     }
 
+    //mklink /D "C:\Users\TGDD-MSI\Downloads\PocketMine-MP\plugins\Reddust" "D:\phpstorm\Reddust"
     public function getEntities() : array {
         return $this->entities;
     }
 
-    public function onItemEntityMove(ItemEntity $entity) {
+    public function onItemEntityMove(ItemEntity $entity) : void{
         $position = $entity->getPosition();
         for ($i = 0; $i >= -1; --$i) {
-            $tile = $position->getWorld()->getTile($position->add(0, $i, 0));
-            if ($tile instanceof PmHopperTile && $position->y - $tile->getPosition()->y < 0.75) {
+            $tile = $position->getWorld()->getTileAt($position->getFloorX(), $position->getFloorY() + $i, $position->getFloorZ());
+            if ($tile instanceof PmHopperTile && $position->getY() - $tile->getPosition()->getY() < 1.75) { // && $position->y - $tile->getPosition()->y < 1.75) {
                 $item = $entity->getItem();
                 if (!$item->isNull()) {
                     $residue_count = 0;
@@ -70,7 +71,9 @@ final class ItemEntityListener implements Listener{
     public function registerItemEntity(ItemEntity $entity) : void{
         if (!$entity->isClosed() && !$entity->isFlaggedForDespawn()) {
             $this->entities[$entity->getId()] = new ItemEntityMovementNotifier($entity, $this);
-            if ($this->ticker === null) $this->tick();
+            if ($this->ticker === null) {
+                $this->tick();
+            }
         }
     }
 
@@ -94,8 +97,9 @@ final class ItemEntityListener implements Listener{
 
     public function onItemDespawn(ItemDespawnEvent $event) {
         $entity = $event->getEntity();
-        if ($entity instanceof ItemEntity)
+        if ($entity instanceof ItemEntity) {
             $this->deregisterItemEntity($entity);
+        }
     }
 
     public function isTicking() : bool{
@@ -106,7 +110,7 @@ final class ItemEntityListener implements Listener{
         if($this->ticker !== null){
             throw new LogicException("Tried scheduling multiple item entity tickers");
         }
-        $this->ticker = $this->async_iterator->forEach(new ArrayIterator($this->entities), 1, 4)->as(static function(int $id, ItemEntityMovementNotifier $notifier) : AsyncForeachResult{
+        $this->ticker = $this->async_iterator->forEach(new ArrayIterator($this->entities), 1, 8)->as(static function(int $id, ItemEntityMovementNotifier $notifier) : AsyncForeachResult{
             $notifier->update();
             return AsyncForeachResult::CONTINUE();
         })->onCompletion(function() : void{
