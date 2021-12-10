@@ -65,7 +65,7 @@ class Hopper extends PmHopper {
                 $item = $entity->getItem();
                 $amount = $item->getCount();
                 //To-do: Optimize this for a better readable code
-                for ($slot = 0; $slot < 5; ++$slot) { //$hopper_inventory->getSize(); ++$slot) {
+                for ($slot = 0; $slot < $hopper_inventory->getSize(); ++$slot) {
                     $s = $hopper_inventory->getItem($slot);
                     if ($s->isNull()) {
                         $hopper_inventory->setItem($slot, $item);
@@ -75,7 +75,6 @@ class Hopper extends PmHopper {
                     if (!$s->canStackWith($item) || $s->getCount() === $s->getMaxStackSize()) continue;
                     $s->setCount(min($s->getMaxStackSize(), $old = $s->getCount() + $amount));
                     $hopper_inventory->setItem($slot, $s);
-                    //$amount -= max(0, $s->get);
                     $amount = $old - $s->getCount();
                     if ($amount <= 0) {
                         $amount = 0;
@@ -83,13 +82,12 @@ class Hopper extends PmHopper {
                     }
                 }
 
-                //print("\n" . $item->getCount() . " ---> " . $amount . "\n");
-
                 if ($amount !== $item->getCount()) {
                     $entity->flagForDespawn();
                     if ($amount > 0) {
                         $this->position->getWorld()->dropItem($this->position, $item->setCount($amount), new Vector3(0, 0, 0));
                     }
+                    return;
                 }
             }
         }
