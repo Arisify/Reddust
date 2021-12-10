@@ -161,25 +161,22 @@ class Hopper extends PmHopper {
         $this->transfering_cooldown--;
         $this->collecting_cooldown--;
 
-        if ($this->transfering_cooldown === 0) {
-
-            if ($this->getInventory() !== null && $this->getContainerFacing() ?? $this->getContainerAbove() !== null) {
-                $facing = $this->getContainerFacing();
-                if ($facing !== null) {
-                    assert($facing instanceof Container);
-                    $this->push();
-                }
-                $above = $this->getContainerAbove();
-                if ($above !== null) {
-                    assert($above instanceof Container);
-                    $this->pull();
-                }
-
-                $this->transfering_cooldown = 8;
+        if ($this->transfering_cooldown <= 0 && $this->getInventory() !== null && ($this->getContainerFacing() ?? $this->getContainerAbove() !== null)) {
+            $facing = $this->getContainerFacing();
+            if ($facing !== null) {
+                assert($facing instanceof Container);
+                $this->push();
             }
+            $above = $this->getContainerAbove();
+            if ($above !== null) {
+                assert($above instanceof Container);
+                $this->pull();
+            }
+
+            $this->transfering_cooldown = 8;
         }
 
-        if ($this->collecting_cooldown === 0) {
+        if ($this->collecting_cooldown <= 0) {
             $this->collect();
             $this->collecting_cooldown = 8;
         }
