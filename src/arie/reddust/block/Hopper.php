@@ -15,6 +15,9 @@ use pocketmine\math\Vector3;
 
 class Hopper extends PmHopper {
 
+    protected int $collect_cooldown = 0;
+    protected int $transfer_cooldown = 0;
+
     public function getTile() : ?HopperTile{
         $tile = $this->position->getWorld()->getTile($this->position);
         return $tile instanceof HopperTile ? $tile : null;
@@ -54,7 +57,7 @@ class Hopper extends PmHopper {
         $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
     }
 
-    public function pickup() {
+    public function collect() : void{
         $hopper_inventory = $this->getInventory();
         foreach ($this->getTile()->getCollectCollisionBoxes() as $collectCollisionBox) {
             foreach ($this->position->getWorld()->getNearbyEntities($collectCollisionBox) as $entity) {
@@ -154,20 +157,33 @@ class Hopper extends PmHopper {
     public function onScheduledUpdate(): void {
         parent::onScheduledUpdate();
         if ($this->isPowered() || !$this->position->getWorld()->isChunkLoaded($this->position->getX() >> 4, $this->position->getZ() >> 4)) return;
-        if ($this->getInventory() !== null){
-            $facing = $this->getContainerFacing();
-            if ($facing !== null) {
-                assert($facing instanceof Container);
-                $this->push();
-            }
-            $above = $this->getContainerAbove();
-            if ($above !== null) {
-                assert($above instanceof Container);
-                $this->pull();
+
+        $this->transfer_cooldown--;
+        $this->collect_cooldown--;
+
+        if ($this->transfer_cooldown === 0) {
+
+            if ($this->getInventory() !== null && $this->getContainerFacing() ?? $this->getContainerAbove() !== null) {
+                $facing = $this->getContainerFacing();
+                if ($facing !== null) {
+                    assert($facing instanceof Container);
+                    $this->push();
+                }
+                $above = $this->getContainerAbove();
+                if ($above !== null) {
+                    assert($above instanceof Container);
+                    $this->pull();
+                }
+
+                $this->transfer_cooldown = 8;
             }
         }
 
-        $this->pickup();
+        if ($this->collecting_cooldown === 0) {
+            $this->collect();
+            $this->collecting_cooldown = 8;
+        }
+
         $this->updateHopperTickers();
     }
 }
