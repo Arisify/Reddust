@@ -61,8 +61,8 @@ class Hopper extends PmHopper {
                 if ($entity->isClosed() || $entity->isFlaggedForDespawn() || !$entity instanceof ItemEntity) continue;
                 $item = $entity->getItem();
                 $amount = $item->getCount();
+                //To-do: Optimize this for a better readable code
                 for ($slot = 0; $slot < 5; ++$slot) { //$hopper_inventory->getSize(); ++$slot) {
-                    if ($amount <= 0) break;
                     $s = $hopper_inventory->getItem($slot);
                     if ($s->isNull()) {
                         $hopper_inventory->setItem($slot, $item);
@@ -74,10 +74,13 @@ class Hopper extends PmHopper {
                     $hopper_inventory->setItem($slot, $s);
                     //$amount -= max(0, $s->get);
                     $amount = $old - $s->getCount();
-                    if ($amount < 0) $amount = 0;
+                    if ($amount <= 0) {
+                        $amount = 0;
+                        break;
+                    }
                 }
 
-                print("\n" . $item->getCount() . " ---> " . $amount . "\n");
+                //print("\n" . $item->getCount() . " ---> " . $amount . "\n");
 
                 if ($amount !== $item->getCount()) {
                     $entity->flagForDespawn();
@@ -87,29 +90,6 @@ class Hopper extends PmHopper {
                 }
             }
         }
-    }
-
-    protected function collect() : bool {
-        foreach ($this->getTile()->getCollectCollisionBoxes() as $collectCollisionBox) {
-            foreach ($this->position->getWorld()->getNearbyEntities($collectCollisionBox) as $entity) {
-                if ($entity->isClosed() || $entity->isFlaggedForDespawn() || !$entity instanceof ItemEntity) continue;
-                $item = $entity->getItem();
-                if (!$item->isNull()) {
-                    if (!$this->getInventory()->canAddItem($item)) continue;
-                    $residue_count = 0;
-                    foreach ($this->getInventory()->addItem($item) as $residue) {
-                        $residue_count += $residue->getCount();
-                    }
-                    if ($residue_count === 0) {
-                        $entity->flagForDespawn();
-                    } else {
-                        $item->setCount($residue_count);
-                    }
-                    break;
-                }
-            }
-        }
-        return true;
     }
 
     protected function pull() : bool{
