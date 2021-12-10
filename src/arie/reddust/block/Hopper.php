@@ -15,8 +15,8 @@ use pocketmine\math\Vector3;
 
 class Hopper extends PmHopper {
 
-    protected int $collect_cooldown = 0;
-    protected int $transfer_cooldown = 0;
+    protected int $collecting_cooldown = 0;
+    protected int $transfering_cooldown = 0;
 
     public function getTile() : ?HopperTile{
         $tile = $this->position->getWorld()->getTile($this->position);
@@ -158,10 +158,10 @@ class Hopper extends PmHopper {
         parent::onScheduledUpdate();
         if ($this->isPowered() || !$this->position->getWorld()->isChunkLoaded($this->position->getX() >> 4, $this->position->getZ() >> 4)) return;
 
-        $this->transfer_cooldown--;
-        $this->collect_cooldown--;
+        $this->transfering_cooldown--;
+        $this->collecting_cooldown--;
 
-        if ($this->transfer_cooldown === 0) {
+        if ($this->transfering_cooldown === 0) {
 
             if ($this->getInventory() !== null && $this->getContainerFacing() ?? $this->getContainerAbove() !== null) {
                 $facing = $this->getContainerFacing();
@@ -175,7 +175,7 @@ class Hopper extends PmHopper {
                     $this->pull();
                 }
 
-                $this->transfer_cooldown = 8;
+                $this->transfering_cooldown = 8;
             }
         }
 
