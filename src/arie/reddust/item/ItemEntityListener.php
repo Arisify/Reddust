@@ -50,7 +50,7 @@ final class ItemEntityListener implements Listener{
         $position = $entity->getPosition();
         for ($i = 0; $i >= -1; --$i) {
             $tile = $position->getWorld()->getTileAt($position->getFloorX(), $position->getFloorY() + $i, $position->getFloorZ());
-            if ($tile instanceof PmHopperTile && $position->getY() - $tile->getPosition()->getY() < 1.75) { // && $position->y - $tile->getPosition()->y < 1.75) {
+            if ($tile instanceof PmHopperTile) {
                 $item = $entity->getItem();
                 if (!$item->isNull()) {
                     $residue_count = 0;
@@ -110,7 +110,8 @@ final class ItemEntityListener implements Listener{
         if($this->ticker !== null){
             throw new LogicException("Tried scheduling multiple item entity tickers");
         }
-        $this->ticker = $this->async_iterator->forEach(new ArrayIterator($this->entities), 1, 8)->as(static function(int $id, ItemEntityMovementNotifier $notifier) : AsyncForeachResult{
+        if (empty($this->entities)) return false;
+        $this->ticker = $this->async_iterator->forEach(new ArrayIterator($this->entities), 1, 1)->as(static function(int $id, ItemEntityMovementNotifier $notifier) : AsyncForeachResult{
             $notifier->update();
             return AsyncForeachResult::CONTINUE();
         })->onCompletion(function() : void{

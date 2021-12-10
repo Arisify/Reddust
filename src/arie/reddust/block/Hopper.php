@@ -7,16 +7,22 @@ use pocketmine\block\Hopper as PmHopper;
 use pocketmine\block\inventory\HopperInventory;
 use pocketmine\block\tile\Container;
 use pocketmine\block\tile\Furnace;
-use pocketmine\block\tile\Hopper as PmHopperTile;
-use pocketmine\item\Item;
+use pocketmine\entity\object\ItemEntity;
 use pocketmine\math\Facing;
-use pocketmine\player\Player;
+
+use arie\reddust\block\tile\Hopper as HopperTile;
+use pocketmine\math\Vector3;
 
 class Hopper extends PmHopper {
 
+    public function getTile() : ?HopperTile{
+        $tile = $this->position->getWorld()->getTile($this->position);
+        return $tile instanceof HopperTile ? $tile : null;
+    }
+
     public function getInventory() : ?HopperInventory{
         $tile = $this->position->getWorld()->getTile($this->position);
-        return $tile instanceof PmHopperTile ? $tile->getInventory() : null;
+        return $tile instanceof HopperTile ? $tile->getInventory() : null;
     }
 
     public function getContainerAbove() : ?Container{
@@ -26,7 +32,7 @@ class Hopper extends PmHopper {
 
     public function getContainerFacing() : ?Container{
         $facing = $this->position->getWorld()->getTile($this->position->getSide($this->getFacing()));
-        return ($facing instanceof Container && $this->getFacing() != Facing::UP) ? $facing : null;
+        return ($facing instanceof Container && $this->getFacing() !== Facing::UP) ? $facing : null;
     }
 
     protected function updateHopperTickers() : void{
@@ -35,34 +41,76 @@ class Hopper extends PmHopper {
         }
     }
 
-    public function readStateFromWorld() : void{
-        parent::readStateFromWorld();
-        $this->updateHopperTickers();
-    }
-
     public function onNearbyBlockChange() : void{
         parent::onNearbyBlockChange();
         $this->updateHopperTickers();
     }
 
     public function canRescheduleTransferCooldown() : bool{
-        return ($this->getContainerFacing() ?? $this->getContainerAbove()) !== null;
+        return true; //($this->getContainerFacing() ?? $this->getContainerAbove()) !== null;
     }
 
     public function rescheduleTransferCooldown() : void {
-        $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 8);
+        $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
     }
 
-    /**public function onBreak(Item $item, ?Player $player = null): bool {
-        if (empty($this->getInventory()?->getContents())) {
+    public function pickup() {
+        $hopper_inventory = $this->getInventory();
+        foreach ($this->getTile()->getCollectCollisionBoxes() as $collectCollisionBox) {
+            foreach ($this->position->getWorld()->getNearbyEntities($collectCollisionBox) as $entity) {
+                if ($entity->isClosed() || $entity->isFlaggedForDespawn() || !$entity instanceof ItemEntity) continue;
+                $item = $entity->getItem();
+                $amount = $item->getCount();
+                for ($slot = 0; $slot < 5; ++$slot) { //$hopper_inventory->getSize(); ++$slot) {
+                    if ($amount <= 0) break;
+                    $s = $hopper_inventory->getItem($slot);
+                    if ($s->isNull()) {
+                        $hopper_inventory->setItem($slot, $item);
+                        $amount = 0;
+                        break;
+                    }
+                    if (!$s->canStackWith($item) || $s->getCount() === $s->getMaxStackSize()) continue;
+                    $s->setCount(min($s->getMaxStackSize(), $old = $s->getCount() + $amount));
+                    $hopper_inventory->setItem($slot, $s);
+                    //$amount -= max(0, $s->get);
+                    $amount = $old - $s->getCount();
+                    if ($amount < 0) $amount = 0;
+                }
 
+                print("\n" . $item->getCount() . " ---> " . $amount . "\n");
+
+                if ($amount !== $item->getCount()) {
+                    $entity->flagForDespawn();
+                    if ($amount > 0) {
+                        $this->position->getWorld()->dropItem($this->position, $item->setCount($amount), new Vector3(0, 0, 0));
+                    }
+                }
+            }
         }
-        return parent::onBreak($item, $player);
     }
 
-    public function getDrops(Item $item): array{
-        parent::getDrops();
-    }*/
+    protected function collect() : bool {
+        foreach ($this->getTile()->getCollectCollisionBoxes() as $collectCollisionBox) {
+            foreach ($this->position->getWorld()->getNearbyEntities($collectCollisionBox) as $entity) {
+                if ($entity->isClosed() || $entity->isFlaggedForDespawn() || !$entity instanceof ItemEntity) continue;
+                $item = $entity->getItem();
+                if (!$item->isNull()) {
+                    if (!$this->getInventory()->canAddItem($item)) continue;
+                    $residue_count = 0;
+                    foreach ($this->getInventory()->addItem($item) as $residue) {
+                        $residue_count += $residue->getCount();
+                    }
+                    if ($residue_count === 0) {
+                        $entity->flagForDespawn();
+                    } else {
+                        $item->setCount($residue_count);
+                    }
+                    break;
+                }
+            }
+        }
+        return true;
+    }
 
     protected function pull() : bool{
         $above = $this->getContainerAbove();
@@ -97,9 +145,9 @@ class Hopper extends PmHopper {
 
         for ($slot = 0; $slot < $hopper_inventory->geTSize(); ++$slot) {
             $item = $hopper_inventory->getItem($slot);
-            if ($item->isNull()) continue; //why :C
+            if ($item->isNull()) continue;
             if ($facing instanceof Furnace) {
-                if ($this->getFacing() == Facing::DOWN) {
+                if ($this->getFacing() === Facing::DOWN) {
                     $smelting = $facing_inventory->getSmelting();
                     if ($smelting->isNull() || ($item->equals($smelting) && $smelting->getCount() < $smelting->getMaxStackSize())) { //Seems like $smelting is null is not really necessary.
                         $facing_inventory->setSmelting((clone $item)->setCount(($smelting->getCount() ?? 0) + 1));
@@ -114,7 +162,7 @@ class Hopper extends PmHopper {
                         return true;
                     }
                 }
-            } else if (!$facing instanceof PmHopperTile && $facing_inventory->canAddItem($item)) {
+            } elseif ($facing_inventory->canAddItem($item)) {
                 $facing_inventory->addItem($item->pop());
                 $hopper_inventory->setItem($slot, $item);
                 return true;
@@ -125,10 +173,10 @@ class Hopper extends PmHopper {
 
     public function onScheduledUpdate(): void {
         parent::onScheduledUpdate();
-        if ($this->isPowered()) return;
+        if ($this->isPowered() || !$this->position->getWorld()->isChunkLoaded($this->position->getX() >> 4, $this->position->getZ() >> 4)) return;
         if ($this->getInventory() !== null){
             $facing = $this->getContainerFacing();
-            if ($facing != null) {
+            if ($facing !== null) {
                 assert($facing instanceof Container);
                 $this->push();
             }
@@ -138,6 +186,8 @@ class Hopper extends PmHopper {
                 $this->pull();
             }
         }
+
+        $this->pickup();
         $this->updateHopperTickers();
     }
 }
