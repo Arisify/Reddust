@@ -1,0 +1,7 @@
+name: Reddust
+main: arie\reddust\Loader
+version: 0.1alpha2
+api: 4.0.0
+extensions:
+  Core: ">=8.0"
+author: NTT1906
