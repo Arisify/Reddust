@@ -3,10 +3,15 @@ declare(strict_types=1);
 
 namespace arie\reddust;
 
+use arie\reddust\block\Composer;
+use pocketmine\block\BlockBreakInfo;
 use pocketmine\block\BlockFactory;
 use pocketmine\block\BlockIdentifier;
+use pocketmine\block\BlockLegacyIds;
+use pocketmine\block\BlockToolType;
 use pocketmine\block\tile\TileFactory;
 use pocketmine\block\VanillaBlocks;
+use pocketmine\item\ToolTier;
 use pocketmine\plugin\PluginBase;
 
 use arie\reddust\block\Hopper;
@@ -32,6 +37,8 @@ final class Loader extends PluginBase {
             $hopper->getBreakInfo()),
             true
         );
+
+        BlockFactory::getInstance()->register(new Composer(new BlockIdentifier(BlockLegacyIds::COMPOSTER, 0), "Composter", new BlockBreakInfo(0.6, BlockToolType::AXE, ToolTier::WOOD()->getHarvestLevel(), 0.6)));
 
         TileFactory::getInstance()->register(HopperTile::class, ["Hopper", "minecraft:hopper"]);
     }
