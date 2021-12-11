@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace arie\reddust;
 
-use arie\reddust\block\Composer;
 use pocketmine\block\BlockBreakInfo;
 use pocketmine\block\BlockFactory;
 use pocketmine\block\BlockIdentifier;
@@ -15,7 +14,9 @@ use pocketmine\item\ToolTier;
 use pocketmine\plugin\PluginBase;
 
 use arie\reddust\block\Hopper;
+use arie\reddust\block\Composer;
 use arie\reddust\block\tile\Hopper as HopperTile;
+use arie\reddust\block\utils\ComposerUtils;
 use arie\reddust\item\ItemEntityListener;
 
 final class Loader extends PluginBase {
@@ -25,6 +26,9 @@ final class Loader extends PluginBase {
 
     /** @var ItemEntityListener */
     private ItemEntityListener $item_entity_listener;
+
+    /** @var ComposerUtils  */
+    private ComposerUtils $composerUtils;
 
     protected function onLoad() : void {
         self::$instance = $this;
@@ -50,5 +54,6 @@ final class Loader extends PluginBase {
     protected function onEnable() : void {
         $this->getLogger()->info("Nothing here to see you silly!");
         //$this->item_entity_listener = new ItemEntityListener($this);
+        $this->composerUtils = new ComposerUtils($this);
     }
 }
