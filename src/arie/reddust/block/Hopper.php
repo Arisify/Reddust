@@ -57,7 +57,7 @@ class Hopper extends PmHopper {
         $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
     }
 
-    public function collect() : void{
+    public function collect() : bool{
         $hopper_inventory = $this->getInventory();
         foreach ($this->getTile()->getCollectCollisionBoxes() as $collectCollisionBox) {
             foreach ($this->position->getWorld()->getNearbyEntities($collectCollisionBox) as $entity) {
@@ -67,15 +67,12 @@ class Hopper extends PmHopper {
                 //To-do: Optimize this for a better readable code
                 for ($slot = 0; $slot < $hopper_inventory->getSize(); ++$slot) {
                     $s = $hopper_inventory->getItem($slot);
-                    if ($s->isNull()) {
-                        $hopper_inventory->setItem($slot, $item);
-                        $amount = 0;
-                        break;
-                    }
+
                     if (!$s->canStackWith($item) || $s->getCount() === $s->getMaxStackSize()) continue;
-                    $s->setCount(min($s->getMaxStackSize(), $old = $s->getCount() + $amount));
-                    $hopper_inventory->setItem($slot, $s);
-                    $amount = $old - $s->getCount();
+
+                    $ss = $s->isNull() ? $item : (new $item)->setCount(min($s->getMaxStackSize(), $s->getCount() + $amount));
+                    $hopper_inventory->setItem($slot, $ss);
+                    $amount -= $ss->getCount() - $s->getCount();
                     if ($amount <= 0) {
                         $amount = 0;
                         break;
@@ -87,15 +84,17 @@ class Hopper extends PmHopper {
                     if ($amount > 0) {
                         $this->position->getWorld()->dropItem($this->position, $item->setCount($amount), new Vector3(0, 0, 0));
                     }
-                    return;
+                    return true;
                 }
             }
         }
+        return false;
     }
 
     protected function pull() : bool{
         $above = $this->getContainerAbove();
         $above_inventory = $above->getInventory();
+        $hopper_inventory = $this->getInventory();
 
         if ($above instanceof Furnace) {
             $item = $above_inventory->getResult();

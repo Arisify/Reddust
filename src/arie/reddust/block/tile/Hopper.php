@@ -12,6 +12,7 @@ class Hopper extends PmHopperTile {
 
     /** @var AxisAlignedBB[] */
     protected array $collectCollisionBoxes = [];
+    
     public function __construct(World $world, Vector3 $pos) {
         parent::__construct($world, $pos);
 
