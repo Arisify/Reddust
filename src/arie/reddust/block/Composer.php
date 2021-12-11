@@ -10,6 +10,8 @@ use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
 use pocketmine\player\Player;
 
+use arie\reddust\block\utils\ComposerUtils;
+
 class Composer extends Transparent {
 
     /** @var int */
@@ -21,10 +23,6 @@ class Composer extends Transparent {
 
     public function readStateFromData(int $id, int $stateMeta) : void{
         $this->composter_fill_level = $stateMeta;
-    }
-
-    public function getStateBitmask() : int{
-        return 0b1111;
     }
 
     protected function recalculateCollisionBoxes() : array{ //Ban dau thi co 14 o trong, khi muc 1 la 13, muc 2 la 11, 3-9, 4-7, 5-5, 6-3, 7-1, 8-1
@@ -45,8 +43,12 @@ class Composer extends Transparent {
      * @throws \Exception
      */
     public function onInteract(Item $item, int $face, Vector3 $clickVector, ?Player $player = null): bool{
-        $this->compost($player->getInventory()->getItemInHand());
-        return true;
+        if ($player instanceof Player && !$player->isSneaking()) {
+            $item = $player->getInventory()->getItemInHand()->pop();
+            $this->compost($item);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -55,7 +57,7 @@ class Composer extends Transparent {
     public function compost(Item $item) : bool{
         if (!ComposerUtils::isCompostable($item)) return false;
         $percent = ComposerUtils::getPercentage($item);
-        if ($this->composter_fill_level < 8 && random_int(1, 100/$percent) === 1) {
+        if ($this->composter_fill_level < 8 && random_int(1, (int) (100/$percent)) === 1) {
             $this->composter_fill_level++;
             return true;
         }

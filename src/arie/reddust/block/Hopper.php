@@ -67,10 +67,12 @@ class Hopper extends PmHopper {
                 //To-do: Optimize this for a better readable code
                 for ($slot = 0; $slot < $hopper_inventory->getSize(); ++$slot) {
                     $s = $hopper_inventory->getItem($slot);
+                    print("WHY BUGS");
 
-                    if (!$s->canStackWith($item) || $s->getCount() === $s->getMaxStackSize()) continue;
-
-                    $ss = $s->isNull() ? $item : (new $item)->setCount(min($s->getMaxStackSize(), $s->getCount() + $amount));
+                    if ($s->isNull()) {
+                        $ss = $item;
+                    } elseif (!$s->canStackWith($item) || $s->getCount() === $s->getMaxStackSize()) continue;
+                    else $ss = $s->isNull() ? $item : (clone $item)->setCount(min($s->getMaxStackSize(), $s->getCount() + $amount));
                     $hopper_inventory->setItem($slot, $ss);
                     $amount -= $ss->getCount() - $s->getCount();
                     if ($amount <= 0) {
