@@ -14,9 +14,10 @@ use pocketmine\item\ToolTier;
 use pocketmine\plugin\PluginBase;
 
 use arie\reddust\block\Hopper;
-use arie\reddust\block\Composer;
+use arie\reddust\block\Composter;
 use arie\reddust\block\tile\Hopper as HopperTile;
-use arie\reddust\block\utils\ComposerUtils;
+use arie\reddust\block\tile\Composter as ComposterTile;
+use arie\reddust\block\utils\ComposterUtils;
 use arie\reddust\item\ItemEntityListener;
 
 final class Loader extends PluginBase {
@@ -27,12 +28,15 @@ final class Loader extends PluginBase {
     /** @var ItemEntityListener */
     private ItemEntityListener $item_entity_listener;
 
-    /** @var ComposerUtils  */
-    private ComposerUtils $composerUtils;
+    /** @var ComposterUtils  */
+    private ComposterUtils $composterUtils;
 
     protected function onLoad() : void {
         self::$instance = $this;
         $hopper = VanillaBlocks::HOPPER();
+
+        TileFactory::getInstance()->register(HopperTile::class, ["Hopper", "minecraft:hopper"]);
+        TileFactory::getInstance()->register(ComposterTile::class, ["Composter", "minecraft:composter"]);
 
         //BlockFactory::getInstance()->register(new Hopper($hopper->getIdInfo(), $hopper->getName(), $hopper->getBreakInfo()), true);
         BlockFactory::getInstance()->register(new Hopper(
@@ -42,9 +46,7 @@ final class Loader extends PluginBase {
             true
         );
 
-        BlockFactory::getInstance()->register(new Composer(new BlockIdentifier(BlockLegacyIds::COMPOSTER, 0), "Composter", new BlockBreakInfo(0.6, BlockToolType::AXE, ToolTier::WOOD()->getHarvestLevel(), 0.6)));
-
-        TileFactory::getInstance()->register(HopperTile::class, ["Hopper", "minecraft:hopper"]);
+        BlockFactory::getInstance()->register(new Composter(new BlockIdentifier(BlockLegacyIds::COMPOSTER, 0, 468, ComposterTile::class), "Composter", new BlockBreakInfo(0.6, BlockToolType::AXE, ToolTier::WOOD()->getHarvestLevel(), 0.6)));
     }
 
     public static function getInstance() : self {
@@ -54,6 +56,6 @@ final class Loader extends PluginBase {
     protected function onEnable() : void {
         $this->getLogger()->info("Nothing here to see you silly!");
         //$this->item_entity_listener = new ItemEntityListener($this);
-        $this->composerUtils = new ComposerUtils($this);
+        $this->composerUtils = new ComposterUtils($this);
     }
 }

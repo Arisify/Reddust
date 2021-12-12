@@ -20,9 +20,10 @@ use pocketmine\item\Melon;
 use pocketmine\item\MelonSeeds;
 use pocketmine\item\Potato;
 use pocketmine\item\PumpkinSeeds;
+use pocketmine\item\SweetBerries;
 use pocketmine\item\WheatSeeds;
 
-class ComposerUtils {
+class ComposterUtils {
 
     protected static array $list = [];
 
@@ -69,7 +70,7 @@ class ComposerUtils {
         self::register(new MelonSeeds(new ItemIdentifier(ItemIds::MELON_SEEDS, 0), "Melon Seeds"));
         //Todo: add moss carpet (590:0)
 
-        self::register(new PumpkinSeeds(new ItemIdentifier(ItemIds::PUMPKIN_SEEDS, 0), "Pumkin Seeds"));
+        self::register(new PumpkinSeeds(new ItemIdentifier(ItemIds::PUMPKIN_SEEDS, 0), "Pumpkin Seeds"));
         self::register(new ItemBlock(new ItemIdentifier(ItemIds::SAPLING, 0), VanillaBlocks::OAK_SAPLING()));
         self::register(new ItemBlock(new ItemIdentifier(ItemIds::SAPLING, 1), VanillaBlocks::SPRUCE_SAPLING()));
         self::register(new ItemBlock(new ItemIdentifier(ItemIds::SAPLING, 2), VanillaBlocks::BIRCH_SAPLING()));
@@ -79,7 +80,7 @@ class ComposerUtils {
 
         //Todo: add sea grass
         //Todo: add small dripleaf
-        //Todo: add sweet berry
+        self::register(new SweetBerries(new ItemIdentifier(ItemIds::SWEET_BERRIES, 0), "Sweet Berry"));
         self::register(new WheatSeeds(new ItemIdentifier(ItemIds::WHEAT_SEEDS, 0), "Wheat Seeds"));
 
         // region 50% percentage compost
@@ -120,7 +121,7 @@ class ComposerUtils {
 
         //Todo: add Big Dripleaf
         self::register(new Carrot(new ItemIdentifier(ItemIds::CARROT, 0), "Carrot"), 65);
-        self::register(new CocoaBeans(new ItemIdentifier(351, 0), "Cocoa Beans"), 65);
+        self::register(new CocoaBeans(new ItemIdentifier(351, 3), "Cocoa Beans"), 65);
         self::register(new ItemBlock(new ItemIdentifier(ItemIds::DOUBLE_PLANT, 2), VanillaBlocks::TALL_GRASS()), 65); //Fern
         self::register(new ItemBlock(new ItemIdentifier(ItemIds::DOUBLE_PLANT, 3), VanillaBlocks::TALL_GRASS()), 65);
         self::register(new ItemBlock(new ItemIdentifier(ItemIds::DOUBLE_PLANT, 3), VanillaBlocks::LARGE_FERN()), 65);
@@ -205,19 +206,21 @@ class ComposerUtils {
         // region 100% percentage compost
         self::register(new Item(new ItemIdentifier(ItemIds::CAKE, 0), "Cake"), 100);
         self::register(new Item(new ItemIdentifier(ItemIds::PUMPKIN_PIE, 0), "Pumpkin Pie"), 100);
+        //var_dump(self::$list);
     }
 
-    public static function register(Item $item, $percentage = 30) : bool{
-        if (isset(self::$list[$item->getId() . ($item->getMeta() !== 0) ? ":" . $item->getMeta() : ""])) return false;
-        self::$list[$item->getId() . ($item->getMeta() !== 0) ? ":" . $item->getMeta() : ""] = $percentage;
+    public static function register(Item $item, int $percentage = 30) : bool{
+        //print($item->getId() . (($item->getMeta() !== 0) ? ":" . $item->getMeta() : "") . "\n");
+        //if (isset(self::$list[$item->getId() . ($item->getMeta() !== 0) ? ":" . $item->getMeta() : ""])) return false;
+        self::$list[$item->getId() . (($item->getMeta() !== 0) ? ":" . $item->getMeta() : "")] = $percentage;
         return true;
     }
 
     public static function isCompostable(Item $item) : bool{
-        return isset(self::$list[$item->getId() . ($item->getMeta() !== 0) ? ":" . $item->getMeta() : ""]);
+        return isset(self::$list[$item->getId() . (($item->getMeta() !== 0) ? ":" . $item->getMeta() : "")]);
     }
 
     public static function getPercentage(Item $item) {
-        return self::$list[$item->getId() . ($item->getMeta() !== 0) ? ":" . $item->getMeta() : ""] ?? 0;
+        return self::$list[$item->getId() . (($item->getMeta() !== 0) ? ":" . $item->getMeta() : "")] ?? 0;
     }
 }
