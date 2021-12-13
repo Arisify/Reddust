@@ -127,6 +127,13 @@ class Hopper extends PmHopper {
 
         for ($slot = 0; $slot < $hopper_inventory->geTSize(); ++$slot) {
             $item = $hopper_inventory->getItem($slot);
+
+            //Todo: use match() to add multi functioning behavior
+
+            if (($block = $this->position->getWorld()->getBlock($this->position->getSide($this->getFacing()))) instanceof Composter) {
+                if ($block->compost($item)) $item->pop();
+            }
+
             if ($item->isNull()) continue;
             if ($facing instanceof Furnace) {
                 if ($this->getFacing() === Facing::DOWN) {
