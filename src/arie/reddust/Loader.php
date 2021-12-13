@@ -16,17 +16,11 @@ use pocketmine\plugin\PluginBase;
 use arie\reddust\block\Hopper;
 use arie\reddust\block\Composter;
 use arie\reddust\block\tile\Hopper as HopperTile;
-use arie\reddust\block\tile\Composter as ComposterTile;
 use arie\reddust\block\utils\ComposterUtils;
-use arie\reddust\item\ItemEntityListener;
 
 final class Loader extends PluginBase {
     /** @var Loader */
     private static self $instance;
-
-
-    /** @var ItemEntityListener */
-    private ItemEntityListener $item_entity_listener;
 
     /** @var ComposterUtils  */
     private ComposterUtils $composterUtils;
@@ -36,7 +30,6 @@ final class Loader extends PluginBase {
         $hopper = VanillaBlocks::HOPPER();
 
         TileFactory::getInstance()->register(HopperTile::class, ["Hopper", "minecraft:hopper"]);
-        TileFactory::getInstance()->register(ComposterTile::class, ["Composter", "minecraft:composter"]);
 
         //BlockFactory::getInstance()->register(new Hopper($hopper->getIdInfo(), $hopper->getName(), $hopper->getBreakInfo()), true);
         BlockFactory::getInstance()->register(new Hopper(
@@ -46,7 +39,11 @@ final class Loader extends PluginBase {
             true
         );
 
-        BlockFactory::getInstance()->register(new Composter(new BlockIdentifier(BlockLegacyIds::COMPOSTER, 0, 468, ComposterTile::class), "Composter", new BlockBreakInfo(0.6, BlockToolType::AXE, ToolTier::WOOD()->getHarvestLevel(), 0.6)));
+        BlockFactory::getInstance()->register(new Composter(new BlockIdentifier(BlockLegacyIds::COMPOSTER, 0), "Composter", new BlockBreakInfo(0.6, BlockToolType::AXE, ToolTier::WOOD()->getHarvestLevel(), 0.6)));
+    }
+
+    public function getComposterUtils() : ?ComposterUtils{
+        return $this->composterUtils;
     }
 
     public static function getInstance() : self {

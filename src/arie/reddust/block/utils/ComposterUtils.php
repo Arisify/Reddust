@@ -92,7 +92,7 @@ class ComposterUtils {
         self::register(new Melon(new ItemIdentifier(ItemIds::MELON_SLICE, 0), "Melon slice"), 50);
         //Todo: add Nether Sprouts
         self::register(new ItemBlock(new ItemIdentifier(ItemIds::SUGARCANE, 0), VanillaBlocks::SUGARCANE()), 50);
-
+        //Todo: add flowers
         self::register(new ItemBlock(new ItemIdentifier(ItemIds::DOUBLE_PLANT, 2), VanillaBlocks::DOUBLE_TALLGRASS()), 50);
 
         self::register(new ItemBlock(new ItemIdentifier(ItemIds::VINES, 0), VanillaBlocks::VINES()), 50);
