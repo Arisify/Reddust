@@ -217,7 +217,7 @@ class ComposterUtils {
     }
 
     public static function isCompostable(Item $item) : bool{
-        return isset(self::$list[$item->getId() . (($item->getMeta() !== 0) ? ":" . $item->getMeta() : "")]);
+        return !$item->isNull() && isset(self::$list[$item->getId() . (($item->getMeta() !== 0) ? ":" . $item->getMeta() : "")]);
     }
 
     public static function getPercentage(Item $item) {
