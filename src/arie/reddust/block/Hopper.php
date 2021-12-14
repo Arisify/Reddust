@@ -57,17 +57,16 @@ class Hopper extends PmHopper {
         $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
     }
 
-    public function collect() : bool{
+    protected function collect() : bool{
         $hopper_inventory = $this->getInventory();
         foreach ($this->getTile()->getCollectCollisionBoxes() as $collectCollisionBox) {
             foreach ($this->position->getWorld()->getNearbyEntities($collectCollisionBox) as $entity) {
                 if ($entity->isClosed() || $entity->isFlaggedForDespawn() || !$entity instanceof ItemEntity) continue;
                 $item = $entity->getItem();
                 $amount = $item->getCount();
-                //To-do: Optimize this for a better readable code
+                // Optimize this for a better readable code
                 for ($slot = 0; $slot < $hopper_inventory->getSize(); ++$slot) {
                     $s = $hopper_inventory->getItem($slot);
-                    print("WHY BUGS");
 
                     if ($s->isNull()) {
                         $ss = $item;
@@ -122,16 +121,19 @@ class Hopper extends PmHopper {
 
     protected function push() : bool{
         $facing = $this->getContainerFacing();
-        $facing_inventory = $facing->getInventory();
+        $facing_inventory = $facing?->getInventory();
         $hopper_inventory = $this->getInventory();
 
         for ($slot = 0; $slot < $hopper_inventory->geTSize(); ++$slot) {
             $item = $hopper_inventory->getItem($slot);
 
-            //Todo: use match() to add multi functioning behavior
-
             if (($block = $this->position->getWorld()->getBlock($this->position->getSide($this->getFacing()))) instanceof Composter) {
-                if ($block->compost($item)) $item->pop();
+                if (!$item->isNull() && $block->compost($item)) {
+                    $item->pop();
+                    $hopper_inventory->setItem($slot, $item);
+                    return true;
+                }
+                continue;
             }
 
             if ($item->isNull()) continue;
@@ -167,15 +169,15 @@ class Hopper extends PmHopper {
         $this->transfering_cooldown--;
         $this->collecting_cooldown--;
 
-        if ($this->transfering_cooldown <= 0 && $this->getInventory() !== null && ($this->getContainerFacing() ?? $this->getContainerAbove() !== null)) {
+        if ($this->transfering_cooldown <= 0 && $this->getInventory() !== null &&
+            ((($block = $this->position->getWorld()->getBlock($this->position->getSide($this->getFacing()))) instanceof Composter) ||($this->getContainerFacing() ?? $this->getContainerAbove() !== null))
+        ) {
             $facing = $this->getContainerFacing();
-            if ($facing !== null) {
-                assert($facing instanceof Container);
+            if ($block instanceof Composter || $facing instanceof Container) {
                 $this->push();
             }
             $above = $this->getContainerAbove();
-            if ($above !== null) {
-                assert($above instanceof Container);
+            if ($above instanceof Container) {
                 $this->pull();
             }
 

@@ -70,7 +70,12 @@ class Composter extends Transparent {
         if ($this->composter_fill_level >= 8) {
             $this->position->getWorld()->addSound($this->position, new ComposterEmptySound());
             for ($i = 0; $i < 40; $i++) $this->position->getWorld()->addParticle($this->position->add(0.5 - sin(deg2rad(mt_rand(-75, 75))) / 2, 0.5 + mt_rand(-1, 10) / 16, 0.5 - sin(deg2rad(mt_rand(-75, 75))) / 2), new HappyVillagerParticle());
-            $this->position->getWorld()->dropItem($this->position->add(0.5, ($this->composter_fill_level + 2) / 16, 0.5), (new Item(new ItemIdentifier(351, 15), "Bone Meal"))->setCount(1), new Vector3(0, 0, 0));
+            $block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::DOWN));
+            if ($block instanceof Hopper) {
+                $block->getInventory()->addItem((new Item(new ItemIdentifier(351, 15));
+            } else {
+                $this->position->getWorld()->dropItem($this->position->add(0.5, ($this->composter_fill_level + 2) / 16, 0.5), (new Item(new ItemIdentifier(351, 15), "Bone Meal"))->setCount(1), new Vector3(0, 0, 0));
+            }
             $this->composter_fill_level = 0;
         } else {
             if (!ComposterUtils::isCompostable($item)) return false;

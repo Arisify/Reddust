@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace arie\reddust\block;
 
-use pocketmine\block\Lever as PmLever;
+use pocketmine\block\RedstoneComparator as PmRedstoneComparator;
 
-class Lever extends PmLever {
+class RedstoneComparator extends PmRedstoneComparator{
     public function canBeFlowedInto() : bool{
         return false;
     }

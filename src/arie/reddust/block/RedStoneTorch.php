@@ -12,5 +12,7 @@ use pocketmine\player\Player;
 use pocketmine\world\BlockTransaction;
 
 class RedstoneTorch extends PmRedstoneTorch {
-    //to-do
+    public function canBeFlowedInto() : bool{
+        return false;
+    }
 }

@@ -1,10 +1,9 @@
 <?php
 declare(strict_types=1);
-
 namespace arie\reddust\block;
 
 use pocketmine\block\Opaque;
 
-class Piston extends Opaque{
+class Dropper extends Opaque {
 
 }
