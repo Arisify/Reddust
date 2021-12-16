@@ -201,23 +201,20 @@ class ComposterUtils {
         self::register(new ItemBlock(new ItemIdentifier(ItemIds::RED_MUSHROOM_BLOCK, 13), VanillaBlocks::RED_MUSHROOM_BLOCK()), 85);
         self::register(new ItemBlock(new ItemIdentifier(ItemIds::RED_MUSHROOM_BLOCK, 14), VanillaBlocks::RED_MUSHROOM_BLOCK()), 85);
 
-        //Todo: Nether Wart Block, Warped Wart Bloc
+        //TODO: Nether Wart Block, Warped Wart Bloc
 
         // region 100% percentage compost
         self::register(new Item(new ItemIdentifier(ItemIds::CAKE, 0), "Cake"), 100);
         self::register(new Item(new ItemIdentifier(ItemIds::PUMPKIN_PIE, 0), "Pumpkin Pie"), 100);
-        //var_dump(self::$list);
     }
 
     public static function register(Item $item, int $percentage = 30) : bool{
-        //print($item->getId() . (($item->getMeta() !== 0) ? ":" . $item->getMeta() : "") . "\n");
-        //if (isset(self::$list[$item->getId() . ($item->getMeta() !== 0) ? ":" . $item->getMeta() : ""])) return false;
         self::$list[$item->getId() . (($item->getMeta() !== 0) ? ":" . $item->getMeta() : "")] = $percentage;
         return true;
     }
 
-    public static function isCompostable(Item $item) : bool{
-        return !$item->isNull() && isset(self::$list[$item->getId() . (($item->getMeta() !== 0) ? ":" . $item->getMeta() : "")]);
+    public static function isCompostable(?Item $item = null) : bool{
+        return $item !== null && !$item->isNull() && isset(self::$list[$item->getId() . (($item->getMeta() !== 0) ? ":" . $item->getMeta() : "")]);
     }
 
     public static function getPercentage(Item $item) {

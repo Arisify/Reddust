@@ -127,7 +127,7 @@ class Hopper extends PmHopper {
         for ($slot = 0; $slot < $hopper_inventory->geTSize(); ++$slot) {
             $item = $hopper_inventory->getItem($slot);
 
-            if (($block = $this->position->getWorld()->getBlock($this->position->getSide($this->getFacing()))) instanceof Composter) {
+            if (($block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::DOWN))) instanceof Composter) {
                 if (!$item->isNull() && $block->compost($item)) {
                     $item->pop();
                     $hopper_inventory->setItem($slot, $item);
@@ -170,7 +170,7 @@ class Hopper extends PmHopper {
         $this->collecting_cooldown--;
 
         if ($this->transfering_cooldown <= 0 && $this->getInventory() !== null &&
-            ((($block = $this->position->getWorld()->getBlock($this->position->getSide($this->getFacing()))) instanceof Composter) ||($this->getContainerFacing() ?? $this->getContainerAbove() !== null))
+            ((($block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::DOWN))) instanceof Composter) ||($this->getContainerFacing() ?? $this->getContainerAbove() !== null))
         ) {
             $facing = $this->getContainerFacing();
             if ($block instanceof Composter || $facing instanceof Container) {

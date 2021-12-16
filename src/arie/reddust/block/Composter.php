@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace arie\reddust\block;
 
+use arie\reddust\block\utils\CompairatorOutputTrait;
 use pocketmine\block\Transparent;
 use pocketmine\block\utils\BlockDataSerializer;
 use pocketmine\item\Item;
@@ -20,6 +21,7 @@ use arie\reddust\world\sound\ComposterFillSuccessSound;
 use arie\reddust\world\sound\ComposterReadySound;
 
 class Composter extends Transparent {
+    use CompairatorOutputTrait;
 
     /** @var int */
     protected int $composter_fill_level = 0;
@@ -53,6 +55,10 @@ class Composter extends Transparent {
         return AxisAlignedBB::one()->trim(Facing::opposite($face), 14/16)->trim(Facing::DOWN, 1 - ($empty/16));
     }
 
+    public function getComparatorOutput(): int{
+        return $this->composter_fill_level;
+    }
+
     /**
      * @throws \Exception
      */
@@ -69,10 +75,10 @@ class Composter extends Transparent {
     public function compost(Item $item) : bool{
         if ($this->composter_fill_level >= 8) {
             $this->position->getWorld()->addSound($this->position, new ComposterEmptySound());
-            for ($i = 0; $i < 40; $i++) $this->position->getWorld()->addParticle($this->position->add(0.5 - sin(deg2rad(mt_rand(-75, 75))) / 2, 0.5 + mt_rand(-1, 10) / 16, 0.5 - sin(deg2rad(mt_rand(-75, 75))) / 2), new HappyVillagerParticle());
+            for ($i = 0; $i < 40; $i++) $this->position->getWorld()->addParticle($this->position->add(0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2, 0.5 + mt_rand(-1, 10) / 16, 0.5 - sin(deg2rad(mt_rand(-4, 45))) / 2), new HappyVillagerParticle());
             $block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::DOWN));
             if ($block instanceof Hopper) {
-                $block->getInventory()->addItem((new Item(new ItemIdentifier(351, 15));
+                $block->getInventory()->addItem((new Item(new ItemIdentifier(351, 15))));
             } else {
                 $this->position->getWorld()->dropItem($this->position->add(0.5, ($this->composter_fill_level + 2) / 16, 0.5), (new Item(new ItemIdentifier(351, 15), "Bone Meal"))->setCount(1), new Vector3(0, 0, 0));
             }
@@ -87,7 +93,7 @@ class Composter extends Transparent {
                 } else {
                     $this->position->getWorld()->addSound($this->position, new ComposterFillSuccessSound());
                 }
-                for ($i = 0; $i < 30; $i++) $this->position->getWorld()->addParticle($this->position->add(0.5 - sin(deg2rad(mt_rand(-75, 75))) / 2, ($this->composter_fill_level + mt_rand(-1, 7)) / 16, 0.5 - sin(deg2rad(mt_rand(-75, 75))) / 2), new HappyVillagerParticle());
+                for ($i = 0; $i < 30; $i++) $this->position->getWorld()->addParticle($this->position->add(0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2, ($this->composter_fill_level + mt_rand(2, 9)) / 16, 0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2), new HappyVillagerParticle());
             } else {
                 $this->position->getWorld()->addSound($this->position, new ComposterFillSound());
             }
