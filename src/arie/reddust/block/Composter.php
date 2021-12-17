@@ -41,7 +41,7 @@ class Composter extends Transparent {
         return 0b1111;
     }
 
-    protected function recalculateCollisionBoxes() : array{ //Ban dau thi co 14 o trong, khi muc 1 la 13, muc 2 la 11, 3-9, 4-7, 5-5, 6-3, 7-1, 8-1
+    /* protected function recalculateCollisionBoxes() : array{ //Ban dau thi co 14 o trong, khi muc 1 la 13, muc 2 la 11, 3-9, 4-7, 5-5, 6-3, 7-1, 8-1
         $boxes = [$this->getSideCollisionBox(Facing::DOWN)];
         foreach (Facing::HORIZONTAL as $side) {
             $boxes[] = $this->getSideCollisionBox($side);
@@ -53,7 +53,7 @@ class Composter extends Transparent {
         $empty = abs(15 - 2*$this->composter_fill_level) - ($this->composter_fill_level === 0);
         if ($face === Facing::DOWN) return AxisAlignedBB::one()->trim(Facing::UP, $empty/16);
         return AxisAlignedBB::one()->trim(Facing::opposite($face), 14/16)->trim(Facing::DOWN, 1 - ($empty/16));
-    }
+    } */
 
     public function getComparatorOutput(): int{
         return $this->composter_fill_level;

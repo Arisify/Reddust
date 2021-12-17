@@ -15,8 +15,14 @@ use pocketmine\math\Vector3;
 
 class Hopper extends PmHopper {
 
+    /** @var int */
     protected int $collecting_cooldown = 0;
+    /** @var int */
     protected int $transfering_cooldown = 0;
+
+    public function writeStateToWorld(): void{
+        parent::writeStateToWorld();
+    }
 
     public function getTile() : ?HopperTile{
         $tile = $this->position->getWorld()->getTile($this->position);
@@ -38,24 +44,11 @@ class Hopper extends PmHopper {
         return ($facing instanceof Container && $this->getFacing() !== Facing::UP) ? $facing : null;
     }
 
-    protected function updateHopperTickers() : void{
-        if($this->canRescheduleTransferCooldown()){
-            $this->rescheduleTransferCooldown();
-        }
-    }
-
-    public function onNearbyBlockChange() : void{
-        parent::onNearbyBlockChange();
-        $this->updateHopperTickers();
-    }
-
-    public function canRescheduleTransferCooldown() : bool{
-        return true; //($this->getContainerFacing() ?? $this->getContainerAbove()) !== null;
-    }
-
-    public function rescheduleTransferCooldown() : void {
+    public function reschedule() : void {
         $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
     }
+
+    /** @noinspection NotOptimalIfConditionsInspection */
 
     protected function collect() : bool{
         $hopper_inventory = $this->getInventory();
@@ -140,7 +133,7 @@ class Hopper extends PmHopper {
             if ($facing instanceof Furnace) {
                 if ($this->getFacing() === Facing::DOWN) {
                     $smelting = $facing_inventory->getSmelting();
-                    if ($smelting->isNull() || ($item->equals($smelting) && $smelting->getCount() < $smelting->getMaxStackSize())) { //Seems like $smelting is null is not really necessary.
+                    if ($smelting->isNull() || ($item->equals($smelting) && $smelting->getCount() < $smelting->getMaxStackSize())) {
                         $facing_inventory->setSmelting((clone $item)->setCount(($smelting->getCount() ?? 0) + 1));
                         $hopper_inventory->setItem($slot, $item->setCount($item->getCount() - 1));
                         return true;
@@ -189,6 +182,6 @@ class Hopper extends PmHopper {
             $this->collecting_cooldown = 8;
         }
 
-        $this->updateHopperTickers();
+        $this->reschedule();
     }
 }
