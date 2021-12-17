@@ -9,9 +9,9 @@ use pocketmine\block\tile\Container;
 use pocketmine\block\tile\Furnace;
 use pocketmine\entity\object\ItemEntity;
 use pocketmine\math\Facing;
+use pocketmine\math\Vector3;
 
 use arie\reddust\block\tile\Hopper as HopperTile;
-use pocketmine\math\Vector3;
 
 class Hopper extends PmHopper {
 
@@ -19,10 +19,6 @@ class Hopper extends PmHopper {
     protected int $collecting_cooldown = 0;
     /** @var int */
     protected int $transfering_cooldown = 0;
-
-    public function writeStateToWorld(): void{
-        parent::writeStateToWorld();
-    }
 
     public function getTile() : ?HopperTile{
         $tile = $this->position->getWorld()->getTile($this->position);
