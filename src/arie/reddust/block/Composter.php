@@ -3,24 +3,21 @@ declare(strict_types=1);
 
 namespace arie\reddust\block;
 
-use arie\reddust\block\utils\CompairatorOutputTrait;
 use pocketmine\block\BlockBreakInfo;
 use pocketmine\block\BlockIdentifier;
 use pocketmine\block\BlockLegacyIds;
 use pocketmine\block\BlockToolType;
 use pocketmine\block\Transparent;
 use pocketmine\block\utils\BlockDataSerializer;
-use pocketmine\block\VanillaBlocks;
-use pocketmine\entity\Entity;
 use pocketmine\item\Item;
 use pocketmine\item\ItemIdentifier;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
 use pocketmine\player\Player;
-use pocketmine\Server;
 use pocketmine\world\particle\HappyVillagerParticle;
 
+use arie\reddust\block\utils\CompairatorOutputTrait;
 use arie\reddust\block\utils\ComposterUtils;
 use arie\reddust\world\sound\ComposterEmptySound;
 use arie\reddust\world\sound\ComposterFillSound;
@@ -48,31 +45,28 @@ class Composter extends Transparent {
         return 0b1111;
     }
 
-    protected function recalculateCollisionBoxes() : array{ //Ban dau thi co 14 o trong, khi muc 1 la 13, muc 2 la 11, 3-9, 4-7, 5-5, 6-3, 7-1, 8-1
+    protected function recalculateCollisionBoxes() : array{
         $boxes = [$this->getSideCollisionBox(Facing::DOWN)];
-
-        /* $empty = abs(15 - 2*$this->composter_fill_level) - ($this->composter_fill_level === 0);
-        foreach ($this->position->getWorld()->getNearbyEntities(new AxisAlignedBB($this->position->getX(), $this->position->getY(), $this->position->getZ(), $this->position->getX()+1, $this->position->getY() + (1 - $empty/16), $this->position->getZ()+1)) as $entity) {
-            //$entity->setMotion(new Vector3(0, 1 - ($empty - 1)/16, 0));
-            //$entity->move(0, 1/8, 0);
-            $mo = $entity->getMotion();
-            var_dump($mo);
-            var_dump($entity->getPosition()->asVector3());
-            //$entity->teleport($this->position->add(0.5, 1 - ($empty/16), 0.5));
-
-            print ("Trigger:  $entity::class from $empty \r\n  \n");
-            Server::getInstance()->getPlayerExact("StockyNoob")?->sendMessage("Trigger:  $entity::class from $empty");
-        } */
-
         foreach (Facing::HORIZONTAL as $side) $boxes[] = $this->getSideCollisionBox($side);
+
+        foreach ($this->position->getWorld()->getNearbyEntities(new AxisAlignedBB($this->position->getX(), $this->position->getY(), $this->position->getZ(), $this->position->getX() + 1, $this->position->getY() + 1, $this->position->getZ() + 1)) as $entity){
+            $entity->setMotion(new Vector3(0, 0.5, 0));
+        }
         return $boxes;
     }
 
     protected function getSideCollisionBox(int $face = Facing::NORTH) : ?AxisAlignedBB{
-        //$empty = abs(15 - 2*$this->composter_fill_level) - ($this->composter_fill_level === 0); //An in-game client/server bug
-        //$empty = $this->composter_fill_level > 4 ? 15 - 2*$this->composter_fill_level : 8;
-        if ($face === Facing::DOWN) return AxisAlignedBB::one()->trim(Facing::UP, 0.5);
-        return AxisAlignedBB::one()->trim(Facing::DOWN, 0.5)->trim(Facing::opposite($face), 14/16); //;
+        $empty = abs(15 - 2*$this->composter_fill_level) - ($this->composter_fill_level === 0);
+        if ($face === Facing::DOWN) return AxisAlignedBB::one()->trim(Facing::UP,$empty/16);
+        return AxisAlignedBB::one()->trim(Facing::DOWN, 1 - $empty/16)->trim(Facing::opposite($face), 14/16); //;
+    }
+
+    public function isEmpty() : bool{
+        return $this->composter_fill_level === 0;
+    }
+
+    public function isReady() : bool{
+        return $this->composter_fill_level === 8;
     }
 
     public function getComparatorOutput(): int{
@@ -100,7 +94,8 @@ class Composter extends Transparent {
             if ($block instanceof Hopper) {
                 $block->getInventory()->addItem((new Item(new ItemIdentifier(351, 15))));
             } else {
-                $this->position->getWorld()->dropItem($this->position->add(0.5, ($this->composter_fill_level + 2) / 16, 0.5), (new Item(new ItemIdentifier(351, 15), "Bone Meal"))->setCount(1), new Vector3(0, 0, 0));
+                $empty = abs(15 - 2*$this->composter_fill_level) - ($this->composter_fill_level === 0);
+                $this->position->getWorld()->dropItem($this->position->add(0.5, 0.85, 0.5), (new Item(new ItemIdentifier(351, 15), "Bone Meal"))->setCount(1), new Vector3(sin(deg2rad(mt_rand(-15, 15))) / 100, sin(deg2rad(mt_rand(0, 15))/100), sin(deg2rad(mt_rand(-15, 15))) / 100));
             }
             $this->composter_fill_level = 0;
         } else {
