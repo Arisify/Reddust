@@ -48,17 +48,12 @@ class Composter extends Transparent {
     protected function recalculateCollisionBoxes() : array{
         $boxes = [$this->getSideCollisionBox(Facing::DOWN)];
         foreach (Facing::HORIZONTAL as $side) $boxes[] = $this->getSideCollisionBox($side);
-
-        foreach ($this->position->getWorld()->getNearbyEntities(new AxisAlignedBB($this->position->getX(), $this->position->getY(), $this->position->getZ(), $this->position->getX() + 1, $this->position->getY() + 1, $this->position->getZ() + 1)) as $entity){
-            $entity->setMotion(new Vector3(0, 0.5, 0));
-        }
         return $boxes;
     }
 
     protected function getSideCollisionBox(int $face = Facing::NORTH) : ?AxisAlignedBB{
-        $empty = abs(15 - 2*$this->composter_fill_level) - ($this->composter_fill_level === 0);
-        if ($face === Facing::DOWN) return AxisAlignedBB::one()->trim(Facing::UP,$empty/16);
-        return AxisAlignedBB::one()->trim(Facing::DOWN, 1 - $empty/16)->trim(Facing::opposite($face), 14/16); //;
+        if ($face === Facing::DOWN) return AxisAlignedBB::one()->trim(Facing::UP,0.5);
+        return AxisAlignedBB::one()->trim(Facing::DOWN, 0.5)->trim(Facing::opposite($face), 14/16);
     }
 
     public function isEmpty() : bool{
