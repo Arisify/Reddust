@@ -9,12 +9,16 @@ use pocketmine\block\BlockLegacyIds;
 use pocketmine\block\BlockToolType;
 use pocketmine\block\Transparent;
 use pocketmine\block\utils\BlockDataSerializer;
+use pocketmine\entity\Living;
+use pocketmine\entity\object\ItemEntity;
 use pocketmine\item\Item;
 use pocketmine\item\ItemIdentifier;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
+use pocketmine\network\mcpe\protocol\MoveActorAbsolutePacket;
 use pocketmine\player\Player;
+use pocketmine\Server;
 use pocketmine\world\particle\HappyVillagerParticle;
 
 use arie\reddust\block\utils\CompairatorOutputTrait;
@@ -23,6 +27,7 @@ use arie\reddust\world\sound\ComposterEmptySound;
 use arie\reddust\world\sound\ComposterFillSound;
 use arie\reddust\world\sound\ComposterFillSuccessSound;
 use arie\reddust\world\sound\ComposterReadySound;
+use pocketmine\world\Position;
 
 class Composter extends Transparent {
     use CompairatorOutputTrait;
@@ -47,13 +52,37 @@ class Composter extends Transparent {
 
     protected function recalculateCollisionBoxes() : array{
         $boxes = [$this->getSideCollisionBox(Facing::DOWN)];
-        foreach (Facing::HORIZONTAL as $side) $boxes[] = $this->getSideCollisionBox($side);
+
+        $empty = abs(15 - 2*$this->composter_fill_level) - ($this->composter_fill_level === 0);
+
+        foreach ($this->position->getWorld()->getNearbyEntities(new AxisAlignedBB($this->position->getX(), $this->position->getY(), $this->position->getZ(), $this->position->getX() + 1, $this->position->getY() + 1, $this->position->getZ() + 1)) as $entity) {
+            if ($entity instanceof Player) continue;
+            if ($entity instanceof Living || $entity instanceof ItemEntity) {
+
+                $entity->setMotion(new Vector3(0, 0, 0));
+                $entity->setHasGravity(false);
+                $entity->setForceMovementUpdate(false);
+                print("Checked: ");
+
+                Server::getInstance()->broadcastPackets($this->position->getWorld()->getPlayers(), [MoveActorAbsolutePacket::create(
+                    $entity->getId(),
+                    new Position($entity->getPosition()->getX(), $this->position->getY() + (1 - $empty/16), $entity->getPosition()->getZ(), $this->position->getWorld()),
+                    $entity->getLocation()->getPitch(),
+                    $entity->getLocation()->getYaw(),
+                    $entity->getLocation()->getYaw(),
+                    MoveActorAbsolutePacket::FLAG_FORCE_MOVE_LOCAL_ENTITY
+                )]);
+
+                var_dump($entity->getLocation());
+            }
+        }
         return $boxes;
     }
 
     protected function getSideCollisionBox(int $face = Facing::NORTH) : ?AxisAlignedBB{
-        if ($face === Facing::DOWN) return AxisAlignedBB::one()->trim(Facing::UP,0.5);
-        return AxisAlignedBB::one()->trim(Facing::DOWN, 0.5)->trim(Facing::opposite($face), 14/16);
+        $empty = abs(15 - 2*$this->composter_fill_level) - ($this->composter_fill_level === 0);
+        if ($face === Facing::DOWN) return AxisAlignedBB::one()->trim(Facing::UP,$empty/16);
+        return AxisAlignedBB::one()->trim(Facing::DOWN, 1 - $empty/16)->trim(Facing::opposite($face), 14/16);
     }
 
     public function isEmpty() : bool{
@@ -90,7 +119,7 @@ class Composter extends Transparent {
                 $block->getInventory()->addItem((new Item(new ItemIdentifier(351, 15))));
             } else {
                 $empty = abs(15 - 2*$this->composter_fill_level) - ($this->composter_fill_level === 0);
-                $this->position->getWorld()->dropItem($this->position->add(0.5, 0.85, 0.5), (new Item(new ItemIdentifier(351, 15), "Bone Meal"))->setCount(1), new Vector3(sin(deg2rad(mt_rand(-15, 15))) / 100, sin(deg2rad(mt_rand(0, 15))/100), sin(deg2rad(mt_rand(-15, 15))) / 100));
+                $this->position->getWorld()->dropItem($this->position->add(0.5, 1 - ($empty - 2)/16, 0.5), (new Item(new ItemIdentifier(351, 15), "Bone Meal"))->setCount(1), new Vector3(sin(deg2rad(mt_rand(-15, 15))) / 100, sin(deg2rad(mt_rand(0, 15))/100), sin(deg2rad(mt_rand(-15, 15))) / 100));
             }
             $this->composter_fill_level = 0;
         } else {
