@@ -62,7 +62,7 @@ class Hopper extends PmHopper {
                     if ($s->isNull()) {
                         $ss = $item;
                     } elseif (!$s->canStackWith($item) || $s->getCount() === $s->getMaxStackSize()) continue;
-                    else $ss = $s->isNull() ? $item : (clone $item)->setCount(min($s->getMaxStackSize(), $s->getCount() + $amount));
+                    else $ss = $s->isNull() ? $item : (clone $item)->setCount(min($s->getMaxStackSize(), $s->getCount() + $amount)); //Messed up bruh
                     $hopper_inventory->setItem($slot, $ss);
                     $amount -= $ss->getCount() - $s->getCount();
                     if ($amount <= 0) {
@@ -156,8 +156,16 @@ class Hopper extends PmHopper {
                     }
                 }
             } elseif ($facing_inventory->canAddItem($item)) {
-                $facing_inventory->addItem($item->pop());
-                $hopper_inventory->setItem($slot, $item);
+                for ($slot2 = 0; $slot2 < $facing_inventory->getSize(); $slot2++) {
+                    $slotItem = $facing_inventory->getItem($slot2);
+                    if (!$slotItem->canStackWith($item) || $slotItem->getCount() === $slotItem->getMaxStackSize()) continue;
+
+                    //$ss = $slotItem->isNull() ? $item->pop() : $item->pop()->setCount($slotItem->getCount() + 1);
+;
+                    $facing_inventory->setItem($slot, $item->pop()->setCount($slotItem->isNull() ? 1 : $slotItem->getCount() + 1));
+                    $hopper_inventory->setItem($slot, $item);
+                    break;
+                }
                 return true;
             }
         }
