@@ -88,6 +88,11 @@ class Hopper extends PmHopper {
         $above_inventory = $above->getInventory();
         $hopper_inventory = $this->getInventory();
 
+        $block = $this->getFacing() === Facing::DOWN ? $this->position->getWorld()->getBlock($this->position->getSide(Facing::UP)) : null;
+        if ($block instanceof Composter && $block->getComposterFillLevel() >= 8) $block->compost();
+
+        if (!$above instanceof Container) return false;
+
         if ($above instanceof Furnace) {
             $item = $above_inventory->getResult();
             if ((!$item->isNull()) && $this->getInventory()->canAddItem($item)) {
@@ -115,11 +120,12 @@ class Hopper extends PmHopper {
         $facing_inventory = $facing?->getInventory();
         $hopper_inventory = $this->getInventory();
 
-        for ($slot = 0; $slot < $hopper_inventory->geTSize(); ++$slot) {
+        $block = $this->getFacing() === Facing::DOWN ? $this->position->getWorld()->getBlock($this->position->getSide($this->getFacing())) : null;
+        if (!$block instanceof Composter || !$block instanceof Jukebox || !$facing instanceof Container) return false;
+
+        for ($slot = 0; $slot < $hopper_inventory->getSize(); ++$slot) {
             $item = $hopper_inventory->getItem($slot);
             if ($item->isNull()) continue;
-
-            $block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::DOWN));
 
             if ($block instanceof Composter) {
                 if ($block->getComposterFillLevel() < 8 && $block->compost($item->pop())) {
@@ -160,9 +166,9 @@ class Hopper extends PmHopper {
                     $slotItem = $facing_inventory->getItem($slot2);
                     if (!$slotItem->canStackWith($item) || $slotItem->getCount() === $slotItem->getMaxStackSize()) continue;
 
-                    //$ss = $slotItem->isNull() ? $item->pop() : $item->pop()->setCount($slotItem->getCount() + 1);
-;
-                    $facing_inventory->setItem($slot, $item->pop()->setCount($slotItem->isNull() ? 1 : $slotItem->getCount() + 1));
+                    //$facing_inventory->setItem($slot, $item->pop()->setCount($slotItem->isNull() ? 1 : $slotItem->getCount() + 1));
+                    $facing_inventory->setItem($slot2, $slotItem->isNull() ? $item->pop() : $item->pop()->setCount($slotItem->getCount() + 1)); //Less than the above 3 calculations :>
+
                     $hopper_inventory->setItem($slot, $item);
                     break;
                 }
@@ -179,18 +185,9 @@ class Hopper extends PmHopper {
         $this->transfering_cooldown--;
         $this->collecting_cooldown--;
 
-        if ($this->transfering_cooldown <= 0 && $this->getInventory() !== null &&
-            ((($block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::DOWN))) instanceof Jukebox) || (($block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::DOWN))) instanceof Composter) ||($this->getContainerFacing() ?? $this->getContainerAbove() !== null))
-        ) {
-            $facing = $this->getContainerFacing();
-            if ($block instanceof Composter || $block instanceof Jukebox || $facing instanceof Container) {
-                $this->push();
-            }
-            $above = $this->getContainerAbove();
-            if ($above instanceof Container) {
-                $this->pull();
-            }
-
+        if ($this->transfering_cooldown <= 0 && $this->getInventory() !== null) {
+            $this->push();
+            $this->pull();
             $this->transfering_cooldown = 8;
         }
 

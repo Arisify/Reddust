@@ -54,7 +54,7 @@ class Composter extends Transparent {
 
     protected function getSideCollisionBox(int $face = Facing::NORTH) : AxisAlignedBB{
         $empty = abs(15 - 2*$this->composter_fill_level) - ($this->composter_fill_level === 0);
-        return $face === Facing::DOWN ? AxisAlignedBB::one()->trim(Facing::UP,$empty/16) : AxisAlignedBB::one()->trim(Facing::DOWN, 1 - $empty/16)->trim(Facing::opposite($face), 14/16);;
+        return $face === Facing::DOWN ? AxisAlignedBB::one()->trim(Facing::UP,$empty/16) : AxisAlignedBB::one()->trim(Facing::DOWN, 1 - $empty/16)->trim(Facing::opposite($face), 14/16);
     }
 
     public function isEmpty() : bool{
@@ -80,7 +80,7 @@ class Composter extends Transparent {
     /**
      * @throws \Exception
      */
-    public function compost(Item $item) : bool{
+    public function compost(?Item $item = null) : bool{
         if ($this->composter_fill_level >= 8) {
             $this->position->getWorld()->addSound($this->position, new ComposterEmptySound());
             for ($i = 0; $i < 40; $i++) $this->position->getWorld()->addParticle($this->position->add(0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2, 0.5 + mt_rand(-1, 10) / 16, 0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2), new HappyVillagerParticle());
