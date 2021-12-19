@@ -4,10 +4,12 @@ declare(strict_types=1);
 namespace arie\reddust\block;
 
 use pocketmine\block\Hopper as PmHopper;
+use pocketmine\block\Jukebox;
 use pocketmine\block\inventory\HopperInventory;
 use pocketmine\block\tile\Container;
 use pocketmine\block\tile\Furnace;
 use pocketmine\entity\object\ItemEntity;
+use pocketmine\item\Record;
 use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
 
@@ -115,17 +117,28 @@ class Hopper extends PmHopper {
 
         for ($slot = 0; $slot < $hopper_inventory->geTSize(); ++$slot) {
             $item = $hopper_inventory->getItem($slot);
+            if ($item->isNull()) continue;
 
-            if (($block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::DOWN))) instanceof Composter) {
-                if (!$item->isNull() && $block->compost($item)) {
-                    $item->pop();
+            $block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::DOWN));
+
+            if ($block instanceof Composter) {
+                if ($block->getComposterFillLevel() < 8 && $block->compost($item->pop())) {
                     $hopper_inventory->setItem($slot, $item);
                     return true;
                 }
                 continue;
             }
 
-            if ($item->isNull()) continue;
+            if ($block instanceof Jukebox) {
+                if ($item instanceof Record) {
+                    $block->insertRecord($item->pop());
+                    $this->getInventory()->setItem($slot, $item);
+                    $this->position->getWorld()->setBlock($block->getPosition(), $block);
+                    return true;
+                }
+                continue;
+            }
+
             if ($facing instanceof Furnace) {
                 if ($this->getFacing() === Facing::DOWN) {
                     $smelting = $facing_inventory->getSmelting();
@@ -159,10 +172,10 @@ class Hopper extends PmHopper {
         $this->collecting_cooldown--;
 
         if ($this->transfering_cooldown <= 0 && $this->getInventory() !== null &&
-            ((($block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::DOWN))) instanceof Composter) ||($this->getContainerFacing() ?? $this->getContainerAbove() !== null))
+            ((($block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::DOWN))) instanceof Jukebox) || (($block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::DOWN))) instanceof Composter) ||($this->getContainerFacing() ?? $this->getContainerAbove() !== null))
         ) {
             $facing = $this->getContainerFacing();
-            if ($block instanceof Composter || $facing instanceof Container) {
+            if ($block instanceof Composter || $block instanceof Jukebox || $facing instanceof Container) {
                 $this->push();
             }
             $above = $this->getContainerAbove();

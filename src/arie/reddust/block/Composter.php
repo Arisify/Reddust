@@ -9,14 +9,11 @@ use pocketmine\block\BlockLegacyIds;
 use pocketmine\block\BlockToolType;
 use pocketmine\block\Transparent;
 use pocketmine\block\utils\BlockDataSerializer;
-use pocketmine\entity\Living;
-use pocketmine\entity\object\ItemEntity;
 use pocketmine\item\Item;
 use pocketmine\item\ItemIdentifier;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
-use pocketmine\network\mcpe\protocol\MoveActorAbsolutePacket;
 use pocketmine\player\Player;
 use pocketmine\Server;
 use pocketmine\world\particle\HappyVillagerParticle;
@@ -27,7 +24,6 @@ use arie\reddust\world\sound\ComposterEmptySound;
 use arie\reddust\world\sound\ComposterFillSound;
 use arie\reddust\world\sound\ComposterFillSuccessSound;
 use arie\reddust\world\sound\ComposterReadySound;
-use pocketmine\world\Position;
 
 class Composter extends Transparent {
     use CompairatorOutputTrait;
@@ -52,37 +48,13 @@ class Composter extends Transparent {
 
     protected function recalculateCollisionBoxes() : array{
         $boxes = [$this->getSideCollisionBox(Facing::DOWN)];
-
-        $empty = abs(15 - 2*$this->composter_fill_level) - ($this->composter_fill_level === 0);
-
-        foreach ($this->position->getWorld()->getNearbyEntities(new AxisAlignedBB($this->position->getX(), $this->position->getY(), $this->position->getZ(), $this->position->getX() + 1, $this->position->getY() + 1, $this->position->getZ() + 1)) as $entity) {
-            if ($entity instanceof Player) continue;
-            if ($entity instanceof Living || $entity instanceof ItemEntity) {
-
-                $entity->setMotion(new Vector3(0, 0, 0));
-                $entity->setHasGravity(false);
-                $entity->setForceMovementUpdate(false);
-                print("Checked: ");
-
-                Server::getInstance()->broadcastPackets($this->position->getWorld()->getPlayers(), [MoveActorAbsolutePacket::create(
-                    $entity->getId(),
-                    new Position($entity->getPosition()->getX(), $this->position->getY() + (1 - $empty/16), $entity->getPosition()->getZ(), $this->position->getWorld()),
-                    $entity->getLocation()->getPitch(),
-                    $entity->getLocation()->getYaw(),
-                    $entity->getLocation()->getYaw(),
-                    MoveActorAbsolutePacket::FLAG_FORCE_MOVE_LOCAL_ENTITY
-                )]);
-
-                var_dump($entity->getLocation());
-            }
-        }
+        foreach (Facing::HORIZONTAL as $side) $boxes[] = $this->getSideCollisionBox($side);
         return $boxes;
     }
 
-    protected function getSideCollisionBox(int $face = Facing::NORTH) : ?AxisAlignedBB{
+    protected function getSideCollisionBox(int $face = Facing::NORTH) : AxisAlignedBB{
         $empty = abs(15 - 2*$this->composter_fill_level) - ($this->composter_fill_level === 0);
-        if ($face === Facing::DOWN) return AxisAlignedBB::one()->trim(Facing::UP,$empty/16);
-        return AxisAlignedBB::one()->trim(Facing::DOWN, 1 - $empty/16)->trim(Facing::opposite($face), 14/16);
+        return $face === Facing::DOWN ? AxisAlignedBB::one()->trim(Facing::UP,$empty/16) : AxisAlignedBB::one()->trim(Facing::DOWN, 1 - $empty/16)->trim(Facing::opposite($face), 14/16);;
     }
 
     public function isEmpty() : bool{
@@ -101,9 +73,7 @@ class Composter extends Transparent {
      * @throws \Exception
      */
     public function onInteract(Item $item, int $face, Vector3 $clickVector, ?Player $player = null): bool{
-        if ($player instanceof Player && !$player->isSneaking()) {
-            if ($this->compost($item)) $item->pop();
-        }
+        if ($player instanceof Player && !$player->isSneaking() && $this->compost($item)) $item->pop();
         return true;
     }
 
