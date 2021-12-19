@@ -3,11 +3,13 @@ declare(strict_types=1);
 
 namespace arie\reddust\block;
 
+use pocketmine\block\BlockLegacyIds;
 use pocketmine\block\Hopper as PmHopper;
 use pocketmine\block\Jukebox;
 use pocketmine\block\inventory\HopperInventory;
 use pocketmine\block\tile\Container;
 use pocketmine\block\tile\Furnace;
+use pocketmine\block\tile\ShulkerBox;
 use pocketmine\entity\object\ItemEntity;
 use pocketmine\item\Record;
 use pocketmine\math\Facing;
@@ -83,15 +85,18 @@ class Hopper extends PmHopper {
         return false;
     }
 
+    /**
+     * @throws \Exception
+     */
     protected function pull() : bool{
-        $above = $this->getContainerAbove();
-        $above_inventory = $above->getInventory();
-        $hopper_inventory = $this->getInventory();
-
-        $block = $this->getFacing() === Facing::DOWN ? $this->position->getWorld()->getBlock($this->position->getSide(Facing::UP)) : null;
+        $block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::UP));
         if ($block instanceof Composter && $block->getComposterFillLevel() >= 8) $block->compost();
 
-        if (!$above instanceof Container) return false;
+        $above = $this->getContainerAbove();
+
+        if ($above === null) return false;
+        $above_inventory = $above?->getInventory();
+        $hopper_inventory = $this->getInventory();
 
         if ($above instanceof Furnace) {
             $item = $above_inventory->getResult();
@@ -120,12 +125,14 @@ class Hopper extends PmHopper {
         $facing_inventory = $facing?->getInventory();
         $hopper_inventory = $this->getInventory();
 
-        $block = $this->getFacing() === Facing::DOWN ? $this->position->getWorld()->getBlock($this->position->getSide($this->getFacing())) : null;
-        if (!$block instanceof Composter || !$block instanceof Jukebox || !$facing instanceof Container) return false;
+        $block = $this->position->getWorld()->getBlock($this->position->getSide($this->getFacing()));
+
+        if (!$block instanceof Composter && !$block instanceof Jukebox && !$facing instanceof Container) return false;
 
         for ($slot = 0; $slot < $hopper_inventory->getSize(); ++$slot) {
             $item = $hopper_inventory->getItem($slot);
             if ($item->isNull()) continue;
+            if ($facing instanceof ShulkerBox && ($item->getId() === BlockLegacyIds::UNDYED_SHULKER_BOX || $item->getId() === BlockLegacyIds::SHULKER_BOX)) continue;
 
             if ($block instanceof Composter) {
                 if ($block->getComposterFillLevel() < 8 && $block->compost($item->pop())) {
@@ -161,14 +168,24 @@ class Hopper extends PmHopper {
                         return true;
                     }
                 }
-            } elseif ($facing_inventory->canAddItem($item)) {
-                for ($slot2 = 0; $slot2 < $facing_inventory->getSize(); $slot2++) {
+            } else {
+                /*
+                $new = $item->pop();
+                if ($facing_inventory->canAddItem($new)) { O(4n)~O(5n) with n = Inventory size ?
+                    $facing_inventory->addItem($new);
+                    $hopper_inventory->setItem($slot, $item);
+                    break;
+                } */
+
+                for ($slot2 = 0; $slot2 < $facing_inventory->getSize(); ++$slot2) {
                     $slotItem = $facing_inventory->getItem($slot2);
+                    if ($slotItem->isNull()) {
+                        $facing_inventory->setItem($slot2, $item->pop());
+                        $hopper_inventory->setItem($slot, $item);
+                        break;
+                    }
                     if (!$slotItem->canStackWith($item) || $slotItem->getCount() === $slotItem->getMaxStackSize()) continue;
-
-                    //$facing_inventory->setItem($slot, $item->pop()->setCount($slotItem->isNull() ? 1 : $slotItem->getCount() + 1));
-                    $facing_inventory->setItem($slot2, $slotItem->isNull() ? $item->pop() : $item->pop()->setCount($slotItem->getCount() + 1)); //Less than the above 3 calculations :>
-
+                    $facing_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
                     $hopper_inventory->setItem($slot, $item);
                     break;
                 }
