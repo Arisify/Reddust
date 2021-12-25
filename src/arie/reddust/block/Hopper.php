@@ -11,9 +11,12 @@ use pocketmine\block\tile\Container;
 use pocketmine\block\tile\Furnace;
 use pocketmine\block\tile\ShulkerBox;
 use pocketmine\entity\object\ItemEntity;
+use pocketmine\item\Item;
 use pocketmine\item\Record;
+use pocketmine\item\Stick;
 use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
+use pocketmine\player\Player;
 
 use arie\reddust\block\tile\Hopper as HopperTile;
 
@@ -209,7 +212,10 @@ class Hopper extends PmHopper {
      */
     public function onScheduledUpdate(): void {
         parent::onScheduledUpdate();
-        if ($this->isPowered() || !$this->position->getWorld()->isChunkLoaded($this->position->getX() >> 4, $this->position->getZ() >> 4)) return;
+        if ($this->isPowered() || !$this->position->getWorld()->isChunkLoaded($this->position->getX() >> 4, $this->position->getZ() >> 4)) {
+            $this->reschedule();
+            return;
+        }
 
         $this->transfering_cooldown--;
         $this->collecting_cooldown--;
