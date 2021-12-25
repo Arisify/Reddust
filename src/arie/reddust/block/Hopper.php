@@ -93,9 +93,9 @@ class Hopper extends PmHopper {
         if ($block instanceof Composter && $block->getComposterFillLevel() >= 8) $block->compost($this);
 
         $above = $this->getContainerAbove();
-
         if ($above === null) return false;
-        $above_inventory = $above?->getInventory();
+
+        $above_inventory = $above->getInventory();
         $hopper_inventory = $this->getInventory();
 
         if ($above instanceof Furnace) {
@@ -111,15 +111,28 @@ class Hopper extends PmHopper {
         for ($slot = 0; $slot < $above_inventory->getSize(); ++$slot) {
             $item = $above_inventory->getItem($slot);
             if ($item->isNull()) continue;
-            if ($this->getInventory()->canAddItem($item)) {
-                $this->getInventory()->addItem($item->pop());
-                $above_inventory->setItem($slot, $item);
-                return true;
+
+            for ($slot2 = 0; $slot2 < $hopper_inventory->getSize(); ++$slot2) {
+                $slotItem = $hopper_inventory->getItem($slot2);
+                if ($slotItem->isNull()) {
+                    $hopper_inventory->setItem($slot2, $item->pop());
+                    break;
+                }
+
+                if (!$slotItem->canStackWith($item) || $slotItem->getCount() === $slotItem->getMaxStackSize()) continue;
+
+                $hopper_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
+                break;
             }
+            $above_inventory->setItem($slot, $item);
+            return true;
         }
         return false;
     }
 
+    /**
+     * @throws \Exception
+     */
     protected function push() : bool{
         $facing = $this->getContainerFacing();
         $facing_inventory = $facing?->getInventory();
@@ -156,6 +169,7 @@ class Hopper extends PmHopper {
             if ($facing instanceof Furnace) {
                 if ($this->getFacing() === Facing::DOWN) {
                     $smelting = $facing_inventory->getSmelting();
+
                     if ($smelting->isNull() || ($item->equals($smelting) && $smelting->getCount() < $smelting->getMaxStackSize())) {
                         $facing_inventory->setSmelting((clone $item)->setCount(($smelting->getCount() ?? 0) + 1));
                         $hopper_inventory->setItem($slot, $item->setCount($item->getCount() - 1));
@@ -163,6 +177,7 @@ class Hopper extends PmHopper {
                     }
                 } else {
                     $fuel = $facing->getInventory()->getFuel();
+
                     if (!$fuel->isNull() ? $item->equals($fuel) && $fuel->getCount() < $fuel->getMaxStackSize() : $item->getFuelTime() > 0) {
                         $facing_inventory->setFuel((clone $item)->setCount(($fuel->getCount() ?? 0) + 1));
                         $hopper_inventory->setItem($slot, $item->setCount($item->getCount() - 1));
@@ -185,7 +200,9 @@ class Hopper extends PmHopper {
                         $hopper_inventory->setItem($slot, $item);
                         break;
                     }
+
                     if (!$slotItem->canStackWith($item) || $slotItem->getCount() === $slotItem->getMaxStackSize()) continue;
+
                     $facing_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
                     $hopper_inventory->setItem($slot, $item);
                     break;
@@ -196,6 +213,9 @@ class Hopper extends PmHopper {
         return false;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function onScheduledUpdate(): void {
         parent::onScheduledUpdate();
         if ($this->isPowered() || !$this->position->getWorld()->isChunkLoaded($this->position->getX() >> 4, $this->position->getZ() >> 4)) return;

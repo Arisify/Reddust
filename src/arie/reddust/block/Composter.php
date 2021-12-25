@@ -3,9 +3,6 @@ declare(strict_types=1);
 
 namespace arie\reddust\block;
 
-use arie\reddust\event\composter\ComposterEmptyEvent;
-use arie\reddust\event\composter\ComposterFillEvent;
-use arie\reddust\event\composter\ComposterReadyEvent;
 use pocketmine\block\Block;
 use pocketmine\block\BlockBreakInfo;
 use pocketmine\block\BlockIdentifier;
@@ -19,11 +16,13 @@ use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
 use pocketmine\player\Player;
-use pocketmine\Server;
 use pocketmine\world\particle\HappyVillagerParticle;
 
 use arie\reddust\block\utils\CompairatorOutputTrait;
 use arie\reddust\block\utils\ComposterUtils;
+use arie\reddust\event\composter\ComposterEmptyEvent;
+use arie\reddust\event\composter\ComposterFillEvent;
+use arie\reddust\event\composter\ComposterReadyEvent;
 use arie\reddust\world\sound\ComposterEmptySound;
 use arie\reddust\world\sound\ComposterFillSound;
 use arie\reddust\world\sound\ComposterFillSuccessSound;
