@@ -135,8 +135,8 @@ class Hopper extends PmHopper {
             if ($facing instanceof ShulkerBox && ($item->getId() === BlockLegacyIds::UNDYED_SHULKER_BOX || $item->getId() === BlockLegacyIds::SHULKER_BOX)) continue;
 
             if ($block instanceof Composter) {
-                if ($block->getComposterFillLevel() < 8 && $block->compost($this, $item)) {
-                    $item->pop();
+                if ($block->getComposterFillLevel() < 8) {
+                    $block->compost($this, $item);
                     $hopper_inventory->setItem($slot, $item);
                     return true;
                 }

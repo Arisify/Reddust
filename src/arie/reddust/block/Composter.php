@@ -77,7 +77,7 @@ class Composter extends Transparent {
      * @throws \Exception
      */
     public function onInteract(Item $item, int $face, Vector3 $clickVector, ?Player $player = null): bool{
-        if ($player instanceof Player && !$player->isSneaking() && $this->compost($player, $item) && $this->composter_fill_level !== 0) $item->pop();
+        if ($player instanceof Player && !$player->isSneaking()) $this->compost($player, $item);
         return true;
     }
 
@@ -92,12 +92,14 @@ class Composter extends Transparent {
 
             $this->position->getWorld()->addSound($this->position, new ComposterEmptySound());
             for ($i = 0; $i < 40; $i++) $this->position->getWorld()->addParticle($this->position->add(0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2, 0.5 + mt_rand(-1, 10) / 16, 0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2), new HappyVillagerParticle());
+
             $block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::DOWN));
             if ($block instanceof Hopper) {
                 $block->getInventory()->addItem((new Item(new ItemIdentifier(351, 15))));
             } else {
                 $this->position->getWorld()->dropItem($this->position->add(0.5, 0.85, 0.5), (new Item(new ItemIdentifier(351, 15), "Bone Meal"))->setCount(1), new Vector3(sin(deg2rad(mt_rand(-15, 15))) / 100, sin(deg2rad(mt_rand(0, 15))/100), sin(deg2rad(mt_rand(-15, 15))) / 100));
             }
+
             $this->composter_fill_level = 0;
         } else {
             if (!ComposterUtils::isCompostable($item)) return false;
@@ -128,6 +130,7 @@ class Composter extends Transparent {
 
                 $this->position->getWorld()->addSound($this->position, new ComposterFillSound());
             }
+            $item->pop();
         }
         $this->position->getWorld()->setBlock($this->position, $this);
         return true;
