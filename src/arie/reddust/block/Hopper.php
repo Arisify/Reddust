@@ -11,12 +11,9 @@ use pocketmine\block\tile\Container;
 use pocketmine\block\tile\Furnace;
 use pocketmine\block\tile\ShulkerBox;
 use pocketmine\entity\object\ItemEntity;
-use pocketmine\item\Item;
 use pocketmine\item\Record;
-use pocketmine\item\Stick;
 use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
-use pocketmine\player\Player;
 
 use arie\reddust\block\tile\Hopper as HopperTile;
 
