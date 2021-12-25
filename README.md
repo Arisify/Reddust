@@ -21,3 +21,6 @@ Credits:
 Timings docs:
 
 - [Redstone timing](https://docs.google.com/document/d/1vUvBWUIS_2iL5SK3T3lhHBZZlrWIxHNRyAt1Cf92LA8/edit?usp=drivesdk) by Jess-`#6738 (Discord)
+
+Icons:
+- [Minecraft Earth](https://minecraft-earth.fandom.com/wiki/Redstone_Dust)

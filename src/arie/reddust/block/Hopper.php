@@ -185,28 +185,19 @@ class Hopper extends PmHopper {
                     }
                 }
             } else {
-                /*
-                $new = $item->pop();
-                if ($facing_inventory->canAddItem($new)) { O(4n)~O(5n) with n = Inventory size ?
-                    $facing_inventory->addItem($new);
-                    $hopper_inventory->setItem($slot, $item);
-                    break;
-                } */
-
                 for ($slot2 = 0; $slot2 < $facing_inventory->getSize(); ++$slot2) {
                     $slotItem = $facing_inventory->getItem($slot2);
                     if ($slotItem->isNull()) {
                         $facing_inventory->setItem($slot2, $item->pop());
-                        $hopper_inventory->setItem($slot, $item);
                         break;
                     }
 
                     if (!$slotItem->canStackWith($item) || $slotItem->getCount() === $slotItem->getMaxStackSize()) continue;
 
                     $facing_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
-                    $hopper_inventory->setItem($slot, $item);
                     break;
                 }
+                $hopper_inventory->setItem($slot, $item);
                 return true;
             }
         }
