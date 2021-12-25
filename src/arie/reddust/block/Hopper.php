@@ -90,7 +90,7 @@ class Hopper extends PmHopper {
      */
     protected function pull() : bool{
         $block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::UP));
-        if ($block instanceof Composter && $block->getComposterFillLevel() >= 8) $block->compost();
+        if ($block instanceof Composter && $block->getComposterFillLevel() >= 8) $block->compost($this);
 
         $above = $this->getContainerAbove();
 
@@ -135,7 +135,8 @@ class Hopper extends PmHopper {
             if ($facing instanceof ShulkerBox && ($item->getId() === BlockLegacyIds::UNDYED_SHULKER_BOX || $item->getId() === BlockLegacyIds::SHULKER_BOX)) continue;
 
             if ($block instanceof Composter) {
-                if ($block->getComposterFillLevel() < 8 && $block->compost($item->pop())) {
+                if ($block->getComposterFillLevel() < 8 && $block->compost($this, $item)) {
+                    $item->pop();
                     $hopper_inventory->setItem($slot, $item);
                     return true;
                 }

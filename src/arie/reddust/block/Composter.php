@@ -77,7 +77,7 @@ class Composter extends Transparent {
      * @throws \Exception
      */
     public function onInteract(Item $item, int $face, Vector3 $clickVector, ?Player $player = null): bool{
-        if ($player instanceof Player && !$player->isSneaking() && $this->compost($player, $item)) $item->pop();
+        if ($player instanceof Player && !$player->isSneaking() && $this->compost($player, $item) && $this->composter_fill_level !== 0) $item->pop();
         return true;
     }
 
@@ -86,7 +86,6 @@ class Composter extends Transparent {
      */
     public function compost(Block | Player $origin, ?Item $item = null) : bool{
         if ($this->composter_fill_level >= 8) {
-
             $event = new ComposterEmptyEvent($origin, $this, [(new Item(new ItemIdentifier(351, 15), "Bone Meal"))->setCount(1)]);
             $event->call();
             if ($event->isCancelled()) return false;
@@ -113,6 +112,10 @@ class Composter extends Transparent {
                 if ($this->composter_fill_level === 8) {
                     $event = new ComposterReadyEvent($origin, $this);
                     $event->call();
+                    if ($event->isCancelled()) {
+                        --$this->composter_fill_level; //Bad solution
+                        return false;
+                    }
                     $this->position->getWorld()->addSound($this->position, new ComposterReadySound());
                 } else {
                     $this->position->getWorld()->addSound($this->position, new ComposterFillSuccessSound());
