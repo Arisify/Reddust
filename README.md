@@ -5,8 +5,7 @@
 An attempt to add bedrock redstone system to pmmp for api 4.0.0
 
 <details> 
-	<summary>To-do: </summary>
-	<br>
+	<summary><strong>To-do:</strong></summary>
   
 - Redstone component: :x:
   - [x] Hopper
