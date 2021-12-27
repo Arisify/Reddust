@@ -45,8 +45,8 @@ An attempt to add bedrock redstone system to pmmp for api 4.0.0
 
 #### Redstone system docs:
 - [Incomplete analysis of MCBE redstone system operation (1)](https://github.com/NTT1906/Reddust/wiki/Incomplete-analysis-of-MCBE-redstone-system-operation-(1)) by hhhxiao
-- [Incomplete analysis of MCBE redstone system operation (2)](https://github.com/NTT1906/Reddust/wiki/Incomplete-analysis-of-MCBE-redstone-system-operation-(2)) by hhhxiao
-- [Incomplete analysis of MCBE redstone system operation (3)](https://github.com/NTT1906/Reddust/wiki/Incomplete-analysis-of-MCBE-redstone-system-operation-(3))  by hhhxiao 
+- [Incomplete analysis of MCBE redstone system operation (2)](https://github.com/NTT1906/Reddust/wiki/Incomplete-analysis-of-MCBE-redstone-system-operation-(2))
+- [Incomplete analysis of MCBE redstone system operation (3)](https://github.com/NTT1906/Reddust/wiki/Incomplete-analysis-of-MCBE-redstone-system-operation-(3))
 - [Redstone timing](https://docs.google.com/document/d/1vUvBWUIS_2iL5SK3T3lhHBZZlrWIxHNRyAt1Cf92LA8/edit?usp=drivesdk) by Jess-`#6738 (Discord)
 
 #### Icons:
