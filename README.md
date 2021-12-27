@@ -4,8 +4,10 @@
 
 An attempt to add bedrock redstone system to pmmp for api 4.0.0
 
-#### To-do:
-
+<details> 
+	<summary>To-do: </summary>
+	<br>
+  
 - Redstone component: :x:
   - [x] Hopper
   - [x] Composter
@@ -28,6 +30,7 @@ An attempt to add bedrock redstone system to pmmp for api 4.0.0
   - [ ] Circuit Handler
   - [ ] Circuit List
 - ?
+</details>
 
 #### Known issues:
 - Entity will clip through the block when block's collision box raised up
