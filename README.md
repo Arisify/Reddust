@@ -27,7 +27,9 @@ An attempt to add bedrock redstone system to pmmp for api 4.0.0
 - Redstone Circuit: :x:
   - [ ] Circuit System
   - [ ] Circuit Handler
+  - [ ] Circuit point
   - [ ] Circuit List
+- Wiki pages and documents: :x:
 - ?
 </details>
 
