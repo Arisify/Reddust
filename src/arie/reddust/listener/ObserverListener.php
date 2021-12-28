@@ -3,11 +3,12 @@ declare(strict_types=1);
 
 namespace arie\reddust\listener;
 
-use arie\reddust\block\Observer;
-use arie\reddust\Loader;
 use pocketmine\event\block\BlockUpdateEvent;
 use pocketmine\event\Listener;
 use pocketmine\math\Facing;
+
+use arie\reddust\block\Observer;
+use arie\reddust\Loader;
 
 final class ObserverListener implements Listener{
     public function __construct(
