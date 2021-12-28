@@ -5,8 +5,13 @@ namespace arie\reddust\circuit;
 use pocketmine\world\Position;
 
 class CircuitSceneGraph{
-    public function update() {
+    private $struct = [];
+    public function update(BlockSource $source) {
         return;
+    }
+
+    public function remove(Position $position, Component $component) {
+        unset($this->struct[$position->__toString()]);
     }
 
     public function getComponents_FastLookupByChunkPos() {

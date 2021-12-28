@@ -117,7 +117,7 @@ final class CircuitSystem implements Listener{
             if ($component->shouldEvaluate()) {
                 if (($typeId == ComponentTypeID::CSPC || $typeId == ComponentTypeID::CSCA) == $only_producers) {
                     $component->evaluate($this, $component->position);
-                    $conponent->setNeedUpdate(true);
+                    $component->setNeedUpdate(true);
                 }
             }
         }
@@ -153,13 +153,33 @@ final class CircuitSystem implements Listener{
     public function removeComponents(Position $position) {
         //Remove the circuit diagram if it is not locked
         if ($this->lockGraph) {
-            $component = $this->
+            $component = $this->circuit_graph->getBaseComponent($position);
+            $this->circuit_graph->remove($position, $component);
         }
     }
 
+    public function setStrength(Position $position, int $strength = 0) {
+        $component = $this->circuit_graph->getBaseComponent($position);
+        if ($component instanceof Component) $component->setStrength($strength);
+    }
 
+    public function updateDependencies(BlockSource $source) {
+        $this->circuit_graph->update($source);
+        $this->hasBeenEvaluated = false;
+    }
 
+    public function createComponent(Position $position, int $facing, Component $new_component) {
+        $component = $new_component->get();
 
+        $component->setDirection($facing);
+
+        if ($this->lockGraph) {
+            $new_component->reset($component);
+            return null;
+        }
+        $this->circuit_graph->add($position, $new_component);
+        return $this->circuit_graph->getFromPendingAdd($position);
+    }
 
     public function tick() {
 

@@ -10,6 +10,10 @@ class Component extends Block {
         return 0;
     }
 
+    public function setStrength(int $strength) : int{
+        return;
+    }
+
     public function hasDirectPower() : bool{
         return false;
     }
