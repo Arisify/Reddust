@@ -10,12 +10,16 @@ use pocketmine\block\BlockLegacyIds;
 use pocketmine\block\BlockToolType;
 use pocketmine\block\Transparent;
 use pocketmine\block\utils\BlockDataSerializer;
+use pocketmine\entity\Entity;
+use pocketmine\entity\object\ItemEntity;
 use pocketmine\item\Item;
 use pocketmine\item\ItemIdentifier;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
+use pocketmine\network\mcpe\protocol\SetActorMotionPacket;
 use pocketmine\player\Player;
+use pocketmine\Server;
 use pocketmine\world\particle\HappyVillagerParticle;
 
 use arie\reddust\block\utils\CompairatorOutputTrait;
@@ -80,6 +84,16 @@ class Composter extends Transparent {
         return true;
     }
 
+    public function pushEntity(Entity $entity) : void{
+        if ($entity instanceof Player) return;
+        print($entity::class . "\n");
+        $motion = $entity->getMotion();
+        $motion->y += 0.2;
+        if ($entity instanceof ItemEntity) {
+            $motion->y += 0.2 + 0.125; //Broken at 1 and 2 fill level
+        }
+        $entity->setMotion($motion);
+    }
     /**
      * @throws \Exception
      */
@@ -108,6 +122,20 @@ class Composter extends Transparent {
                 $event = new ComposterFillEvent($origin, $this, true);
                 $event->call();
                 if ($event->isCancelled()) return false;
+
+                foreach (
+                    $this->position->getWorld()->getNearbyEntities(
+                        new AxisAlignedBB(
+                            $this->position->getFloorX(),
+                            $this->position->getFloorY() - 0.25,
+                            $this->position->getFloorZ(),
+                            $this->position->getFloorX() + 1,
+                            $this->position->getFloorY() + 1,
+                            $this->position->getFloorZ() + 1
+                        )
+                    ) as $entity) {
+                    $this->pushEntity($entity);
+                }
 
                 ++$this->composter_fill_level;
                 if ($this->composter_fill_level === 8) {
