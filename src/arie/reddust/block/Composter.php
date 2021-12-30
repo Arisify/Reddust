@@ -84,15 +84,34 @@ class Composter extends Transparent {
         return true;
     }
 
-    public function pushEntity(Entity $entity) : void{
-        if ($entity instanceof Player) return;
-        print($entity::class . "\n");
-        $motion = $entity->getMotion();
-        $motion->y += 0.2;
-        if ($entity instanceof ItemEntity) {
-            $motion->y += 0.2 + 0.125; //Broken at 1 and 2 fill level
+    public function pushCollidedEntities() : void{
+        foreach (
+            $this->position->getWorld()->getNearbyEntities(
+                new AxisAlignedBB(
+                    $this->position->getFloorX(),
+                    $this->position->getFloorY(),
+                    $this->position->getFloorZ(),
+                    $this->position->getFloorX() + 1,
+                    $this->position->getFloorY() + 1,
+                    $this->position->getFloorZ() + 1
+                )
+            ) as $entity) {
+            if ($entity instanceof Player) continue;
+            print($entity::class . "\n");
+            $motion = $entity->getMotion();
+            var_dump($motion);
+
+            print("new \n");
+            $motion->y += 0.2;
+            if ($entity instanceof ItemEntity) {
+                $motion->y += 0.2 + 0.125; //Broken at 1, 2, 3 and maybe 4 fill level
+            }
+            if ($motion->y > 0.5) $motion->y = 0.5;
+            var_dump($motion);
+
+            print("end \n");
+            $entity->setMotion($motion);
         }
-        $entity->setMotion($motion);
     }
     /**
      * @throws \Exception
@@ -122,21 +141,7 @@ class Composter extends Transparent {
                 $event = new ComposterFillEvent($origin, $this, true);
                 $event->call();
                 if ($event->isCancelled()) return false;
-
-                foreach (
-                    $this->position->getWorld()->getNearbyEntities(
-                        new AxisAlignedBB(
-                            $this->position->getFloorX(),
-                            $this->position->getFloorY() - 0.25,
-                            $this->position->getFloorZ(),
-                            $this->position->getFloorX() + 1,
-                            $this->position->getFloorY() + 1,
-                            $this->position->getFloorZ() + 1
-                        )
-                    ) as $entity) {
-                    $this->pushEntity($entity);
-                }
-
+                $this->pushCollidedEntities();
                 ++$this->composter_fill_level;
                 if ($this->composter_fill_level === 8) {
                     $event = new ComposterReadyEvent($origin, $this);
