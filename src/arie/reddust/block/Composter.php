@@ -88,14 +88,6 @@ class Composter extends Transparent {
     public function pushCollidedEntities() : void{
         foreach (
             $this->position->getWorld()->getNearbyEntities(
-                /** new AxisAlignedBB(
-                    $this->position->getFloorX(),
-                    $this->position->getFloorY(),
-                    $this->position->getFloorZ(),
-                    $this->position->getFloorX() + 1,
-                    $this->position->getFloorY() + 1,
-                    $this->position->getFloorZ() + 1
-                )*/
                 $this->getSideCollisionBox(Facing::DOWN)->extend(Facing::UP, 3/16)->offset(
                     $this->position->getFloorX(),
                     $this->position->getFloorY(),
@@ -103,20 +95,15 @@ class Composter extends Transparent {
                 )
             ) as $entity) {
             if ($entity instanceof Player || $entity instanceof Projectile) continue;
-            print($entity::class . "\n");
             $motion = $entity->getMotion();
-            var_dump($motion);
+            $motion->y += 0.2;
 
-            print("new \n");
-            $motion->y += 0.19;
             if ($entity instanceof ItemEntity) {
-                $motion->y += 0.2 + 0.125; //Broken at 1, 2, 3 and maybe 4 fill level (For item entity only) -> maybe their offset is different or they don't have contact
+                $motion->y += 0.125; //Broken at 1, 2, 3 and maybe 4 fill level (For item entity only) -> maybe their offset is different or they don't have contact
             }
+
             if ($motion->y >= 0.4) $motion->y = 0.4;
             if ($motion->y <= -0.4) $motion->y = -0.4;
-            var_dump($motion);
-
-            print("end \n");
             $entity->setMotion($motion);
         }
     }
