@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace arie\reddust\block;
 
+use pocketmine\block\BlockBreakInfo;
+use pocketmine\block\BlockIdentifier;
 use pocketmine\block\BlockLegacyIds;
 use pocketmine\block\Hopper as PmHopper;
 use pocketmine\block\Jukebox;
@@ -11,22 +13,50 @@ use pocketmine\block\tile\Container;
 use pocketmine\block\tile\Furnace;
 use pocketmine\block\tile\ShulkerBox;
 use pocketmine\entity\object\ItemEntity;
+use pocketmine\item\Item;
 use pocketmine\item\Record;
+use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
 
 use arie\reddust\block\tile\Hopper as HopperTile;
+use pocketmine\player\Player;
 
 class Hopper extends PmHopper {
 
     /** @var int */
     protected int $collecting_cooldown = 0;
+
+    /** @var AxisAlignedBB[] */
+    protected array $collectBoxes = [];
+
     /** @var int */
     protected int $transfering_cooldown = 0;
 
-    public function getTile() : ?HopperTile{
-        $tile = $this->position->getWorld()->getTile($this->position);
-        return $tile instanceof HopperTile ? $tile : null;
+    public function __construct(BlockIdentifier $idInfo, string $name, BlockBreakInfo $breakInfo){
+        parent::__construct($idInfo, $name, $breakInfo);
+        $this->collectBoxes =  [
+            new AxisAlignedBB(
+                $this->position->getX(),
+                $this->position->getY() + 1,
+                $this->position->getZ(),
+                $this->position->getX()+ 1,
+                $this->position->getY() + 1.75,
+                $this->position->getZ() + 1,
+            ),
+            new AxisAlignedBB(
+                $this->position->getX() + 3/16,
+                $this->position->getY() + 10/16,
+                $this->position->getZ() +3/16,
+                $this->position->getX()+ 13/16,
+                $this->position->getY() + 1,
+                $this->position->getZ() + 13/16,
+            )
+        ];
+    }
+
+    public function getCollectBoxes() : ?array{
+        return $this->collectBoxes;
     }
 
     public function getInventory() : ?HopperInventory{
@@ -52,8 +82,8 @@ class Hopper extends PmHopper {
 
     protected function collect() : bool{
         $hopper_inventory = $this->getInventory();
-        foreach ($this->getTile()->getCollectCollisionBoxes() as $collectCollisionBox) {
-            foreach ($this->position->getWorld()->getNearbyEntities($collectCollisionBox) as $entity) {
+        foreach ($this->getCollisionBoxes() as $collectBox) {
+            foreach ($this->position->getWorld()->getNearbyEntities($collectBox) as $entity) {
                 if ($entity->isClosed() || $entity->isFlaggedForDespawn() || !$entity instanceof ItemEntity) continue;
                 $item = $entity->getItem();
                 $amount = $item->getCount();
@@ -64,8 +94,9 @@ class Hopper extends PmHopper {
                     if ($s->isNull()) {
                         $ss = $item;
                     } elseif (!$s->canStackWith($item) || $s->getCount() === $s->getMaxStackSize()) continue;
-                    else $ss = $s->isNull() ? $item : (clone $item)->setCount(min($s->getMaxStackSize(), $s->getCount() + $amount)); //Messed up bruh
+                    else $ss = $s->isNull() ? $item : (clone $item)->setCount(min($s->getMaxStackSize(), $s->getCount() + $amount));
                     $hopper_inventory->setItem($slot, $ss);
+
                     $amount -= $ss->getCount() - $s->getCount();
                     if ($amount <= 0) {
                         $amount = 0;
@@ -122,9 +153,11 @@ class Hopper extends PmHopper {
                 if (!$slotItem->canStackWith($item) || $slotItem->getCount() === $slotItem->getMaxStackSize()) continue;
 
                 $hopper_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
+                $this->tran++;
                 break;
             }
             $above_inventory->setItem($slot, $item);
+            $this->tran++;
             return true;
         }
         return false;
@@ -151,6 +184,7 @@ class Hopper extends PmHopper {
                 if ($block->getComposterFillLevel() < 8) {
                     $block->compost($this, $item);
                     $hopper_inventory->setItem($slot, $item);
+
                     return true;
                 }
                 continue;
@@ -160,6 +194,7 @@ class Hopper extends PmHopper {
                 if ($item instanceof Record) {
                     $block->insertRecord($item->pop());
                     $this->getInventory()->setItem($slot, $item);
+
                     $this->position->getWorld()->setBlock($block->getPosition(), $block);
                     return true;
                 }
@@ -209,7 +244,7 @@ class Hopper extends PmHopper {
      */
     public function onScheduledUpdate(): void {
         parent::onScheduledUpdate();
-        if ($this->isPowered() || !$this->position->getWorld()->isChunkLoaded($this->position->getX() >> 4, $this->position->getZ() >> 4)) {
+        if ($this->isPowered()) {
             $this->reschedule();
             return;
         }
@@ -217,7 +252,7 @@ class Hopper extends PmHopper {
         $this->transfering_cooldown--;
         $this->collecting_cooldown--;
 
-        if ($this->transfering_cooldown <= 0 && $this->getInventory() !== null) {
+        if ($this->transfering_cooldown <= 0) {
             $this->push();
             $this->pull();
             $this->transfering_cooldown = 8;

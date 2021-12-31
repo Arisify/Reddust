@@ -13,14 +13,14 @@ use pocketmine\block\utils\BlockDataSerializer;
 use pocketmine\entity\Entity;
 use pocketmine\entity\object\ItemEntity;
 use pocketmine\entity\projectile\Projectile;
+use pocketmine\item\Fertilizer;
 use pocketmine\item\Item;
 use pocketmine\item\ItemIdentifier;
+use pocketmine\item\ItemIds;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
-use pocketmine\network\mcpe\protocol\SetActorMotionPacket;
 use pocketmine\player\Player;
-use pocketmine\Server;
 use pocketmine\world\particle\HappyVillagerParticle;
 
 use arie\reddust\block\utils\CompairatorOutputTrait;
@@ -38,6 +38,8 @@ class Composter extends Transparent {
 
     /** @var int */
     protected int $composter_fill_level = 0;
+    /** @var bool */
+    protected $collide = false;
 
     protected function writeStateToMeta() : int{
         return $this->composter_fill_level;
@@ -87,8 +89,9 @@ class Composter extends Transparent {
 
     public function pushCollidedEntities() : void{
         foreach (
+            $this->getCollisionBoxes()
             $this->position->getWorld()->getNearbyEntities(
-                $this->getSideCollisionBox(Facing::DOWN)->extend(Facing::UP, 3/16)->offset(
+                $this->getSideCollisionBox(Facing::DOWN)->extend(Facing::UP, 4/16)->offset(
                     $this->position->getFloorX(),
                     $this->position->getFloorY(),
                     $this->position->getFloorZ()
@@ -96,17 +99,15 @@ class Composter extends Transparent {
             ) as $entity) {
             if ($entity instanceof Player || $entity instanceof Projectile) continue;
             $motion = $entity->getMotion();
-            $motion->y += 0.2;
+            $motion->y = $motion->y/2 + 0.2;
+            print($this->composter_fill_level . " : ". $entity::class . PHP_EOL);
 
-            if ($entity instanceof ItemEntity) {
-                $motion->y += 0.125; //Broken at 1, 2, 3 and maybe 4 fill level (For item entity only) -> maybe their offset is different or they don't have contact
-            }
-
-            if ($motion->y >= 0.4) $motion->y = 0.4;
-            if ($motion->y <= -0.4) $motion->y = -0.4;
+            if ($motion->y >= 0.5) $motion->y = 0.5;
+            if ($motion->y <= -0.5) $motion->y = -0.5;
             $entity->setMotion($motion);
         }
     }
+
     /**
      * @throws \Exception
      */
@@ -121,9 +122,10 @@ class Composter extends Transparent {
 
             $block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::DOWN));
             if ($block instanceof Hopper) {
-                $block->getInventory()->addItem((new Item(new ItemIdentifier(351, 15))));
+                $block->getInventory()->addItem(new Fertilizer(new ItemIdentifier(351, 15), "Bone Meal"));
             } else {
-                $this->position->getWorld()->dropItem($this->position->add(0.5, 0.85, 0.5), (new Item(new ItemIdentifier(351, 15), "Bone Meal"))->setCount(1), new Vector3(sin(deg2rad(mt_rand(-15, 15))) / 100, sin(deg2rad(mt_rand(0, 15))/100), sin(deg2rad(mt_rand(-15, 15))) / 100));
+                // NOOP
+                //$this->position->getWorld()->dropItem($this->position->add(0.5, 0.75, 0.5), new Fertilizer(new ItemIdentifier(351, 15), "Bone Meal"), new Vector3(sin(deg2rad(mt_rand(-15, 15))) / 100, sin(deg2rad(mt_rand(0, 15))/100), sin(deg2rad(mt_rand(-15, 15))) / 100));
             }
 
             $this->composter_fill_level = 0;
@@ -146,6 +148,7 @@ class Composter extends Transparent {
                     }
                     $this->position->getWorld()->addSound($this->position, new ComposterReadySound());
                 } else {
+                    //$this->pushCollidedEntities();
                     $this->position->getWorld()->addSound($this->position, new ComposterFillSuccessSound());
                 }
                 for ($i = 0; $i < 30; $i++) $this->position->getWorld()->addParticle($this->position->add(0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2, ($this->composter_fill_level + mt_rand(2, 9)) / 16, 0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2), new HappyVillagerParticle());
@@ -165,7 +168,7 @@ class Composter extends Transparent {
     public function getDrops(Item $item): array{
         return $this->composter_fill_level === 8 ? [
             (new Composter(new BlockIdentifier(BlockLegacyIds::COMPOSTER, 0), "Composter", new BlockBreakInfo(0.6, BlockToolType::AXE)))->asItem(),
-            new Item(new ItemIdentifier(351, 15), "Bone Meal")
+            new Fertilizer(new ItemIdentifier(ItemIds::DYE, 15), "Bone Meal")
         ] : [
             (new Composter(new BlockIdentifier(BlockLegacyIds::COMPOSTER, 0), "Composter", new BlockBreakInfo(0.6, BlockToolType::AXE)))->asItem()
         ];

@@ -10,10 +10,6 @@ use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\world\World;
 
 class Hopper extends PmHopperTile {
-
-    /** @var AxisAlignedBB[] */
-    protected array $collectCollisionBoxes = [];
-
     public const TAG_TRANSFER_COOLDOWN = "TransferCooldown";
     private int $transfer_cooldown = 0;
     
