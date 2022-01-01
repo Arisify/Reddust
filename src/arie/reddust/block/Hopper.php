@@ -72,7 +72,7 @@ class Hopper extends PmHopper {
                     $entity->flagForDespawn();
                     return true;
                 }
-                if (($new_slot ?? 0) === $item->getMaxStackSize()) {
+                if (($new_slot ?? 0) >= $item->getMaxStackSize()) { //I don't want entity keeps
                     $entity->despawnFromAll();
                     $entity->spawnToAll();
                     return true;
@@ -116,7 +116,7 @@ class Hopper extends PmHopper {
                     break;
                 }
 
-                if (!$slotItem->canStackWith($item) || $slotItem->getCount() === $slotItem->getMaxStackSize()) continue;
+                if ($slotItem->getCount() >= $slotItem->getMaxStackSize() || !$slotItem->canStackWith($item)) continue;
 
                 $hopper_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
                 break;
@@ -191,7 +191,7 @@ class Hopper extends PmHopper {
                         break;
                     }
 
-                    if (!$slotItem->canStackWith($item) || $slotItem->getCount() === $slotItem->getMaxStackSize()) continue;
+                    if ($slotItem->getCount() >= $slotItem->getMaxStackSize() || !$slotItem->canStackWith($item)) continue;
 
                     $facing_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
                     break;
