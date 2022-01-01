@@ -15,6 +15,24 @@ class Hopper extends PmHopperTile {
     
     public function __construct(World $world, Vector3 $pos) {
         parent::__construct($world, $pos);
+        $this->collectBoxes =  [
+            new AxisAlignedBB(
+                $this->position->getFloorX() + 3/16,
+                $this->position->getFloorY() + 10/16,
+                $this->position->getFloorZ() +3/16,
+                $this->position->getFloorX()+ 13/16,
+                $this->position->getFloorY() + 1,
+                $this->position->getFloorZ() + 13/16,
+            ),
+            new AxisAlignedBB(
+                $this->position->getFloorX(),
+                $this->position->getFloorY() + 1,
+                $this->position->getFloorZ(),
+                $this->position->getFloorX()+ 1,
+                $this->position->getFloorY() + 1.75,
+                $this->position->getFloorZ() + 1,
+            )
+        ];
     }
 
     public function readSaveData(CompoundTag $nbt) : void{
@@ -29,6 +47,10 @@ class Hopper extends PmHopperTile {
         $this->saveName($nbt);
 
         $nbt->setInt(self::TAG_TRANSFER_COOLDOWN, $this->getTransferCooldown());
+    }
+
+    public function getCollectBoxes() : array{
+        return $this->collectBoxes;
     }
 
     public function getTransferCooldown() : int{
