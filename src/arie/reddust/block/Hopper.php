@@ -13,14 +13,11 @@ use pocketmine\block\tile\Container;
 use pocketmine\block\tile\Furnace;
 use pocketmine\block\tile\ShulkerBox;
 use pocketmine\entity\object\ItemEntity;
-use pocketmine\item\Item;
 use pocketmine\item\Record;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
-use pocketmine\math\Vector3;
 
 use arie\reddust\block\tile\Hopper as HopperTile;
-use pocketmine\player\Player;
 
 class Hopper extends PmHopper {
 
@@ -35,15 +32,8 @@ class Hopper extends PmHopper {
 
     public function __construct(BlockIdentifier $idInfo, string $name, BlockBreakInfo $breakInfo){
         parent::__construct($idInfo, $name, $breakInfo);
+
         $this->collectBoxes =  [
-            new AxisAlignedBB(
-                $this->position->getX(),
-                $this->position->getY() + 1,
-                $this->position->getZ(),
-                $this->position->getX()+ 1,
-                $this->position->getY() + 1.75,
-                $this->position->getZ() + 1,
-            ),
             new AxisAlignedBB(
                 $this->position->getX() + 3/16,
                 $this->position->getY() + 10/16,
@@ -51,6 +41,14 @@ class Hopper extends PmHopper {
                 $this->position->getX()+ 13/16,
                 $this->position->getY() + 1,
                 $this->position->getZ() + 13/16,
+            ),
+            new AxisAlignedBB(
+                $this->position->getX(),
+                $this->position->getY() + 1,
+                $this->position->getZ(),
+                $this->position->getX()+ 1,
+                $this->position->getY() + 1.75,
+                $this->position->getZ() + 1,
             )
         ];
     }
@@ -75,6 +73,7 @@ class Hopper extends PmHopper {
     }
 
     public function reschedule() : void {
+        if ($this->getInventory() === null) return;
         $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
     }
 
@@ -82,63 +81,29 @@ class Hopper extends PmHopper {
 
     protected function collect() : bool{
         $hopper_inventory = $this->getInventory();
-        foreach ($this->getCollisionBoxes() as $collectBox) {
+        foreach ($this->collectBoxes as $collectBox) {
             foreach ($this->position->getWorld()->getNearbyEntities($collectBox) as $entity) {
                 if ($entity->isClosed() || $entity->isFlaggedForDespawn() || !$entity instanceof ItemEntity) continue;
                 $item = $entity->getItem();
-                $amount = $item->getCount();
-                // Optimize this for a better readable code
-                for ($slot = 0; $slot < $hopper_inventory->getSize(); ++$slot) {
+                for ($slot = 0; $slot < $hopper_inventory->getSize() && !$item->isNull(); ++$slot) {
                     $s = $hopper_inventory->getItem($slot);
 
-                    //1
-                    if ($s->isNull()) {
-                        $hopper_inventory->setItem($slot, $item);
-                        break;
-                    }
-                    if (!$s->canStackWith($item) || $s->getCount() === $s->getMaxStackSize()) continue;
-                    $hopper_inventory->setItem($slot, $item->setCount(min($amount + $s->getCount())));
-
-                    //2
-                    if ($s->isNull()) {
-                        $ss = $item;
-                    } elseif (!$s->canStackWith($item) || $s->getCount() === $s->getMaxStackSize()) continue;
-                    else $ss = (clone $item)->setCount(min($s->getMaxStackSize(), $s->getCount() + $amount));
-                    $amount -= $ss->getCount() - $s->getCount();
-                    $hopper_inventory->setItem($slot, $ss);
-                    if ($amount <= 0) {
-                        $amount = 0;
-                        break;
-                    }
-
-                    //3
                     if ($s->getCount() >= $s->getMaxStackSize()) continue;
                     if ($s->canStackWith($item) || $s->isNull()) {
-                        $hopper_inventory->setItem($slot, (clone $item)->setCoung(min($amount + $s->getCount(), $item->getMaxStackSize())));
-                        // 4
-                        $hopper_inventory->setItem($slot, $item->pop(->setCoung(min($amount + $s->getCount(), $item->getMaxStackSize()))));
-
+                        $hopper_inventory->setItem($slot, $item->pop(min($item->getMaxStackSize() - $s->getCount(), $item->getCount()));
                     }
-
-
-                    if (!$s->isNull() && ($s->canStackWith($item)))
-
-                    /*
-                    $give = min($current, $max-slot);
-                    $new current = $current - $give;
-                    if $current == 0 then break the loop and do stuff;
-                    */
-
-
                 }
 
-                if ($amount !== $item->getCount()) {
+                print($entity->getItem()->getCount() . ": ". $item->getCount());
+
+                if ($item->isNull()) {
                     $entity->flagForDespawn();
-                    if ($amount > 0) {
-                        $this->position->getWorld()->dropItem($this->position, $item->setCount($amount), new Vector3(0, 0, 0));
-                    }
                     return true;
                 }
+                $entity->despawnFromAll();
+                //$entity->flagForDespawn();
+                $entity->spawnToAll();
+                return true;
             }
         }
         return false;
@@ -184,7 +149,6 @@ class Hopper extends PmHopper {
                 break;
             }
             $above_inventory->setItem($slot, $item);
-            $this->tran++;
             return true;
         }
         return false;
@@ -271,7 +235,7 @@ class Hopper extends PmHopper {
      */
     public function onScheduledUpdate(): void {
         parent::onScheduledUpdate();
-        if ($this->isPowered()) {
+        if ($this->isPowered() || $this->getInventory() === null) {
             $this->reschedule();
             return;
         }
@@ -289,7 +253,6 @@ class Hopper extends PmHopper {
             $this->collect();
             $this->collecting_cooldown = 8;
         }
-
         $this->reschedule();
     }
 }
