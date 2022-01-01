@@ -89,7 +89,6 @@ class Composter extends Transparent {
 
     public function pushCollidedEntities() : void{
         if ($this->composter_fill_level === 7) return;
-        $empty = abs(15 - 2*$this->composter_fill_level) - ($this->composter_fill_level === 0);
         foreach (
             $this->position->getWorld()->getNearbyEntities(
                 $this->getSideCollisionBox(Facing::DOWN)->extend(Facing::UP, 0.25)->offset(
