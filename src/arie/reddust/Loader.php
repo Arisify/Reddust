@@ -40,17 +40,14 @@ final class Loader extends PluginBase {
 
     protected function onLoad() : void {
         self::$instance = $this;
-
-        TileFactory::getInstance()->register(HopperTile::class, ["Hopper", "minecraft:hopper"]);
-
         $this->registerBlocks();
-
-        //BlockFactory::getInstance()->register(new Hopper($hopper->getIdInfo(), $hopper->getName(), $hopper->getBreakInfo()), true);
     }
 
     private function registerBlocks() : void{
         $hopper = VanillaBlocks::HOPPER();
-        BlockFactory::getInstance()->register(new Hopper(new BlockIdentifier($hopper->getIdInfo()->getBlockId(), $hopper->getIdInfo()->getVariant(), $hopper->getIdInfo()->getItemId(), HopperTile::class), $hopper->getName(), $hopper->getBreakInfo()), true);
+        //TileFactory::getInstance()->register(HopperTile::class, ["Hopper", "minecraft:hopper"]);
+        BlockFactory::getInstance()->register(new Hopper($hopper->getIdInfo(), $hopper->getName(), $hopper->getBreakInfo()), true);
+        //BlockFactory::getInstance()->register(new Hopper(new BlockIdentifier($hopper->getIdInfo()->getBlockId(), $hopper->getIdInfo()->getVariant(), $hopper->getIdInfo()->getItemId(), HopperTile::class), $hopper->getName(), $hopper->getBreakInfo()), true);
         //BlockFactory::getInstance()->register(new Composter(new BlockIdentifier(BlockLegacyIds::COMPOSTER, 0), "Composter", new BlockBreakInfo(0.6, BlockToolType::AXE, 0, 0)));
     }
 
@@ -58,12 +55,12 @@ final class Loader extends PluginBase {
         return $this->composterUtils;
     }
 
-    public static function getInstance() : self {
-        return self::$instance;
-    }
-
     protected function onEnable() : void {
         $this->getLogger()->info("Nothing here!");
         $this->composterUtils = new ComposterUtils($this);
+    }
+
+    public static function getInstance() : self {
+        return self::$instance;
     }
 }

@@ -91,17 +91,45 @@ class Hopper extends PmHopper {
                 for ($slot = 0; $slot < $hopper_inventory->getSize(); ++$slot) {
                     $s = $hopper_inventory->getItem($slot);
 
+                    //1
+                    if ($s->isNull()) {
+                        $hopper_inventory->setItem($slot, $item);
+                        break;
+                    }
+                    if (!$s->canStackWith($item) || $s->getCount() === $s->getMaxStackSize()) continue;
+                    $hopper_inventory->setItem($slot, $item->setCount(min($amount + $s->getCount())));
+
+                    //2
                     if ($s->isNull()) {
                         $ss = $item;
                     } elseif (!$s->canStackWith($item) || $s->getCount() === $s->getMaxStackSize()) continue;
-                    else $ss = $s->isNull() ? $item : (clone $item)->setCount(min($s->getMaxStackSize(), $s->getCount() + $amount));
-                    $hopper_inventory->setItem($slot, $ss);
-
+                    else $ss = (clone $item)->setCount(min($s->getMaxStackSize(), $s->getCount() + $amount));
                     $amount -= $ss->getCount() - $s->getCount();
+                    $hopper_inventory->setItem($slot, $ss);
                     if ($amount <= 0) {
                         $amount = 0;
                         break;
                     }
+
+                    //3
+                    if ($s->getCount() >= $s->getMaxStackSize()) continue;
+                    if ($s->canStackWith($item) || $s->isNull()) {
+                        $hopper_inventory->setItem($slot, (clone $item)->setCoung(min($amount + $s->getCount(), $item->getMaxStackSize())));
+                        // 4
+                        $hopper_inventory->setItem($slot, $item->pop(->setCoung(min($amount + $s->getCount(), $item->getMaxStackSize()))));
+
+                    }
+
+
+                    if (!$s->isNull() && ($s->canStackWith($item)))
+
+                    /*
+                    $give = min($current, $max-slot);
+                    $new current = $current - $give;
+                    if $current == 0 then break the loop and do stuff;
+                    */
+
+
                 }
 
                 if ($amount !== $item->getCount()) {
@@ -153,7 +181,6 @@ class Hopper extends PmHopper {
                 if (!$slotItem->canStackWith($item) || $slotItem->getCount() === $slotItem->getMaxStackSize()) continue;
 
                 $hopper_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
-                $this->tran++;
                 break;
             }
             $above_inventory->setItem($slot, $item);
