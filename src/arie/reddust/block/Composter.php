@@ -88,10 +88,11 @@ class Composter extends Transparent {
     }
 
     public function pushCollidedEntities() : void{
+        if ($this->composter_fill_level === 7) return;
+        $empty = abs(15 - 2*$this->composter_fill_level) - ($this->composter_fill_level === 0);
         foreach (
-            $this->getCollisionBoxes()
             $this->position->getWorld()->getNearbyEntities(
-                $this->getSideCollisionBox(Facing::DOWN)->extend(Facing::UP, 4/16)->offset(
+                $this->getSideCollisionBox(Facing::DOWN)->extend(Facing::UP, 0.25)->offset(
                     $this->position->getFloorX(),
                     $this->position->getFloorY(),
                     $this->position->getFloorZ()
@@ -99,11 +100,7 @@ class Composter extends Transparent {
             ) as $entity) {
             if ($entity instanceof Player || $entity instanceof Projectile) continue;
             $motion = $entity->getMotion();
-            $motion->y = $motion->y/2 + 0.2;
-            print($this->composter_fill_level . " : ". $entity::class . PHP_EOL);
-
-            if ($motion->y >= 0.5) $motion->y = 0.5;
-            if ($motion->y <= -0.5) $motion->y = -0.5;
+            $motion->y = 0.2; //Lower can make entity clip through the block :/
             $entity->setMotion($motion);
         }
     }
@@ -124,8 +121,7 @@ class Composter extends Transparent {
             if ($block instanceof Hopper) {
                 $block->getInventory()->addItem(new Fertilizer(new ItemIdentifier(351, 15), "Bone Meal"));
             } else {
-                // NOOP
-                //$this->position->getWorld()->dropItem($this->position->add(0.5, 0.75, 0.5), new Fertilizer(new ItemIdentifier(351, 15), "Bone Meal"), new Vector3(sin(deg2rad(mt_rand(-15, 15))) / 100, sin(deg2rad(mt_rand(0, 15))/100), sin(deg2rad(mt_rand(-15, 15))) / 100));
+                $this->position->getWorld()->dropItem($this->position->add(0.5, 0.85, 0.5), new Fertilizer(new ItemIdentifier(351, 15), "Bone Meal"), new Vector3(sin(deg2rad(mt_rand(-15, 15))) / 100, sin(deg2rad(mt_rand(0, 15))/100), sin(deg2rad(mt_rand(-15, 15))) / 100));
             }
 
             $this->composter_fill_level = 0;

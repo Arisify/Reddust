@@ -47,7 +47,7 @@ final class Loader extends PluginBase {
         $hopper = VanillaBlocks::HOPPER();
         TileFactory::getInstance()->register(HopperTile::class, ["Hopper", "minecraft:hopper"]);
         BlockFactory::getInstance()->register(new Hopper(new BlockIdentifier($hopper->getIdInfo()->getBlockId(), $hopper->getIdInfo()->getVariant(), $hopper->getIdInfo()->getItemId(), HopperTile::class), $hopper->getName(), $hopper->getBreakInfo()), true);
-        //BlockFactory::getInstance()->register(new Composter(new BlockIdentifier(BlockLegacyIds::COMPOSTER, 0), "Composter", new BlockBreakInfo(0.6, BlockToolType::AXE, 0, 0)));
+        BlockFactory::getInstance()->register(new Composter(new BlockIdentifier(BlockLegacyIds::COMPOSTER, 0), "Composter", new BlockBreakInfo(0.6, BlockToolType::AXE, 0, 0)));
     }
 
     public function getComposterUtils() : ?ComposterUtils{
