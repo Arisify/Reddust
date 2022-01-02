@@ -1,7 +1,10 @@
 name: Reddust
 main: arie\reddust\Loader
-version: 0.1alpha5
-api: 4.0.3
+version: 0.1alpha6
+api: 4.0.4
 extensions:
   Core: ">=8.0"
 author: Arie
+website: https://github.com/NTT1906/Reddust
+authors:
+  - Arie
