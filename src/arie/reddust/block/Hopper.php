@@ -24,6 +24,27 @@ class Hopper extends PmHopper {
     /** @var int */
     protected int $transfering_cooldown = 0;
 
+    public function readStateFromWorld(): void{
+        parent::readStateFromWorld();
+        $tile = $this->position->getWorld()->getTile($this->position);
+        if ($tile instanceof HopperTile) {
+            $this->transfering_cooldown = $tile->getTransferCooldown();
+        }
+    }
+
+    public function writeStateToWorld() : void{
+        parent::writeStateToWorld();
+        $tile = $this->position->getWorld()->getTile($this->position);
+        if($tile instanceof HopperTile){
+            $tile->setTransferCooldown($this->transfering_cooldown);
+        }
+    }
+
+    public function onNearbyBlockChange(): void{
+        parent::onNearbyBlockChange();
+        $this->reschedule();
+    }
+
     public function getCollectBoxes() : array{
         $tile = $this->position->getWorld()->getTile($this->position);
         return $tile instanceof HopperTile ? $tile->getCollectBoxes() : [];
@@ -44,7 +65,7 @@ class Hopper extends PmHopper {
         return ($facing instanceof Container && $this->getFacing() !== Facing::UP) ? $facing : null;
     }
 
-    public function reschedule() : void {
+    public function reschedule() : void{
         if ($this->getInventory() === null) return;
         $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
     }
@@ -72,6 +93,7 @@ class Hopper extends PmHopper {
                     $entity->flagForDespawn();
                     return true;
                 }
+
                 if (($new_slot ?? 0) >= $item->getMaxStackSize()) { //I don't want entity keeps
                     $entity->despawnFromAll();
                     $entity->spawnToAll();

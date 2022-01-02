@@ -54,6 +54,7 @@ class Hopper extends PmHopperTile {
     }
 
     public function getTransferCooldown() : int{
+        // This won't get update every game tick!
         return ($this->transfer_cooldown > 8 || $this->transfer_cooldown < 0) ? 0 : $this->transfer_cooldown;
     }
 

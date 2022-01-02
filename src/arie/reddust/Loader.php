@@ -10,19 +10,17 @@ use pocketmine\block\BlockLegacyIds;
 use pocketmine\block\BlockToolType;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\block\tile\TileFactory;
-use pocketmine\item\ToolTier;
 use pocketmine\plugin\PluginBase;
 
 use arie\reddust\block\Composter;
 use arie\reddust\block\DaylightSensor;
 use arie\reddust\block\Dispenser;
 use arie\reddust\block\Dropper;
+use arie\reddust\block\Hopper;
 use arie\reddust\block\JukeBox;
 use arie\reddust\block\Lever;
-use arie\reddust\block\Piston;
 use arie\reddust\block\Observer;
-
-use arie\reddust\block\Hopper;
+use arie\reddust\block\Piston;
 use arie\reddust\block\RedStoneLamp;
 use arie\reddust\block\RedStoneWire;
 use arie\reddust\block\RedstoneComparator;
@@ -30,6 +28,7 @@ use arie\reddust\block\RedstoneRepeater;
 use arie\reddust\block\RedstoneTorch;
 use arie\reddust\block\tile\Hopper as HopperTile;
 use arie\reddust\block\utils\ComposterUtils;
+use arie\reddust\circuit\CircuitSystem;
 
 final class Loader extends PluginBase {
     /** @var Loader */
@@ -37,6 +36,7 @@ final class Loader extends PluginBase {
 
     /** @var ComposterUtils  */
     private ComposterUtils $composterUtils;
+    private CircuitSystem $circuitSystem;
 
     protected function onLoad() : void {
         self::$instance = $this;
@@ -54,9 +54,14 @@ final class Loader extends PluginBase {
         return $this->composterUtils;
     }
 
+    public function getCircuitSystem() : ?CircuitSystem{
+        return $this->circuitSystem;
+    }
+
     protected function onEnable() : void {
         $this->getLogger()->info("Nothing here!");
         $this->composterUtils = new ComposterUtils($this);
+        $this->circuitSystem = new CircuitSystem($this);
     }
 
     public static function getInstance() : self {

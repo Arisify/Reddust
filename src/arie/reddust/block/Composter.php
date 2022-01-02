@@ -10,8 +10,6 @@ use pocketmine\block\BlockLegacyIds;
 use pocketmine\block\BlockToolType;
 use pocketmine\block\Transparent;
 use pocketmine\block\utils\BlockDataSerializer;
-use pocketmine\entity\Entity;
-use pocketmine\entity\object\ItemEntity;
 use pocketmine\entity\projectile\Projectile;
 use pocketmine\item\Fertilizer;
 use pocketmine\item\Item;
@@ -38,8 +36,6 @@ class Composter extends Transparent {
 
     /** @var int */
     protected int $composter_fill_level = 0;
-    /** @var bool */
-    protected $collide = false;
 
     protected function writeStateToMeta() : int{
         return $this->composter_fill_level;
