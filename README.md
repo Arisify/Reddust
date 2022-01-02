@@ -34,7 +34,7 @@ An attempt to add bedrock redstone system to pmmp for api 4.0.0
 </details>
 
 #### Known issues:
-- Entity will clip through the block when block's collision box raised up (Only fixed for livings, not Item Entity yet)
+- Entity will clip through the block when block's collision box raised up (Only fixed for livings, not Item Entity yet but Item Entity has the same problem in Vanilla)
 
 #### Credits:
 
