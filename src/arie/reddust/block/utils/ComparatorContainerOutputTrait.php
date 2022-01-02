@@ -11,16 +11,11 @@ trait ComparatorContainerOutputTrait{
     public function getComparatorOutput(): int{
         $inventory = $this->getPosition()->getWorld()->getTile($this->getPosition())?->getInventory();
         if ($inventory === null) return 0;
-        $signal = 0;
+        $fullness = 0;
         for ($slot = 0; $slot < $inventory->getSize(); ++$slot) {
             $item = $inventory->getItem($slot);
-            $count = $item->getCount();
-            $maxStack = $item->getMaxStackSize();
-            $signal += match($maxStack) {
-                1 => 3,
-                default => $count/$maxStack
-            };
+            $fullness += $item->getCount() / $item->getMaxStackSize();
         }
-        return (int) floor($signal);
+        return min((int) floor(1 + ($fullness / $inventory->getSize())*14), 15);
     }
 }
