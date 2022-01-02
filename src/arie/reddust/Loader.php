@@ -10,6 +10,9 @@ use pocketmine\block\BlockLegacyIds;
 use pocketmine\block\BlockToolType;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\block\tile\TileFactory;
+use pocketmine\crafting\ShapedRecipe;
+use pocketmine\item\ItemFactory;
+use pocketmine\item\ItemIds;
 use pocketmine\plugin\PluginBase;
 
 use arie\reddust\block\Composter;
@@ -35,7 +38,6 @@ final class Loader extends PluginBase {
     private static self $instance;
 
     /** @var ComposterUtils  */
-    private ComposterUtils $composterUtils;
     private CircuitSystem $circuitSystem;
 
     protected function onLoad() : void {
@@ -50,8 +52,16 @@ final class Loader extends PluginBase {
         BlockFactory::getInstance()->register(new Composter(new BlockIdentifier(BlockLegacyIds::COMPOSTER, 0), "Composter", new BlockBreakInfo(0.6, BlockToolType::AXE, 0, 0)));
     }
 
-    public function getComposterUtils() : ?ComposterUtils{
-        return $this->composterUtils;
+    public function registerCraftingRecipes() : void{
+        $this->getServer()->getCraftingManager()->registerShapedRecipe(new ShapedRecipe(
+            [
+                'A A',
+                'ABA',
+                ' A '
+            ],
+            ['A' => ItemFactory::getInstance()->get(ItemIds::IRON_INGOT), 'B' => VanillaBlocks::CHEST()],
+            [BlockFactory::getInstance()->get(ItemIds::HOPPER)]
+        ));
     }
 
     public function getCircuitSystem() : ?CircuitSystem{

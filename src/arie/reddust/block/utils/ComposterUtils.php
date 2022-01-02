@@ -31,7 +31,6 @@ class ComposterUtils {
         private $plugin
     ) {
         // region 30% percentage compost
-
         self::register(new BeetrootSeeds(new ItemIdentifier(ItemIds::BEETROOT_SEEDS, 0), "Beetroot Seeds"));
         self::register(new DriedKelp(new ItemIdentifier(ItemIds::DRIED_KELP, 0), "Dried Kelp"));
         //Todo: add glow berry (?:?)
@@ -84,7 +83,6 @@ class ComposterUtils {
         self::register(new WheatSeeds(new ItemIdentifier(ItemIds::WHEAT_SEEDS, 0), "Wheat Seeds"));
 
         // region 50% percentage compost
-
         self::register(new ItemBlock(new ItemIdentifier(ItemIds::CACTUS, 0), VanillaBlocks::CACTUS()), 50);
         self::register(new ItemBlock(new ItemIdentifier(ItemIds::DRIED_KELP_BLOCK, 0), VanillaBlocks::DRIED_KELP()), 50);
         self::register(new ItemBlock(new ItemIdentifier(ItemIds::DRIED_KELP_BLOCK, 0), VanillaBlocks::DRIED_KELP()), 50);
@@ -115,7 +113,6 @@ class ComposterUtils {
         //Todo: add Weeping Vines and Twisting Vines
 
         // region 65% percentage compost
-
         self::register(new Apple(new ItemIdentifier(ItemIds::APPLE, 0), "Apple"), 65);
         //Todo: add Azalea
 
@@ -162,7 +159,6 @@ class ComposterUtils {
         //Todo: add Fungus, Roots
 
         // region 85% percentage compost
-
         self::register(new BakedPotato(new ItemIdentifier(ItemIds::BAKED_POTATO, 0), "Baked Potato"), 85);
         self::register(new Bread(new ItemIdentifier(ItemIds::BREAD, 0), "Bread"), 85);
         self::register(new Cookie(new ItemIdentifier(ItemIds::COOKIE, 0), "Cookie"), 85);
