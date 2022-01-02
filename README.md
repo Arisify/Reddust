@@ -40,8 +40,6 @@ An attempt to add bedrock redstone system to pmmp for api 4.0.0
 
 - [MCPERedstoneSystem](https://github.com/hhhxiao/MCBERedstoneSystem)
 - [redstone_system](https://github.com/Earthcomputer/redstone_system)
-- [PmHopper](https://github.com/Muqsit/PMHopper)
-- [RedStoneCircuit](https://github.com/tedo0627/RedstoneCircuit_PMMP-Plugin)
 
 #### Redstone system docs:
 - [Incomplete analysis of MCBE redstone system operation (1)](https://github.com/NTT1906/Reddust/wiki/Incomplete-analysis-of-MCBE-redstone-system-operation-(1)) by hhhxiao
