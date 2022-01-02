@@ -21,7 +21,7 @@ use pocketmine\math\Vector3;
 use pocketmine\player\Player;
 use pocketmine\world\particle\HappyVillagerParticle;
 
-use arie\reddust\block\utils\CompairatorOutputTrait;
+use arie\reddust\block\utils\ComparatorOutputTrait;
 use arie\reddust\block\utils\ComposterUtils;
 use arie\reddust\event\composter\ComposterEmptyEvent;
 use arie\reddust\event\composter\ComposterFillEvent;
@@ -32,7 +32,7 @@ use arie\reddust\world\sound\ComposterFillSuccessSound;
 use arie\reddust\world\sound\ComposterReadySound;
 
 class Composter extends Transparent {
-    use CompairatorOutputTrait;
+    use ComparatorOutputTrait;
 
     /** @var int */
     protected int $composter_fill_level = 0;

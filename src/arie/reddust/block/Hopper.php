@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace arie\reddust\block;
 
+use arie\reddust\block\utils\ComparatorContainerOutputTrait;
 use pocketmine\block\BlockLegacyIds;
 use pocketmine\block\Hopper as PmHopper;
 use pocketmine\block\Jukebox;
@@ -17,6 +18,7 @@ use pocketmine\math\Facing;
 use arie\reddust\block\tile\Hopper as HopperTile;
 
 class Hopper extends PmHopper {
+    use ComparatorContainerOutputTrait;
 
     /** @var int */
     protected int $collecting_cooldown = 0;
