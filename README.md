@@ -1,4 +1,10 @@
-# Reddust
+<p align="center">
+  <a href="https://github.com/NTT1906/Reddust">
+    <img src="https://raw.githubusercontent.com/NTT1906/Reddust/master/icon.png"/>
+  </a>
+</p>
+<h1 align="center">Reddust</h1>
+
 ### In development 
 [![CodeFactor](https://www.codefactor.io/repository/github/ntt1906/reddust/badge)](https://www.codefactor.io/repository/github/ntt1906/reddust)
 
