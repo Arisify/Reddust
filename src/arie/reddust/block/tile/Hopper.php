@@ -36,30 +36,24 @@ class Hopper extends PmHopperTile {
     }
 
     public function readSaveData(CompoundTag $nbt) : void{
-        $this->loadItems($nbt);
-        $this->loadName($nbt);
-
+        parent::readSaveData($nbt);
         $this->transfer_cooldown = $nbt->getInt(self::TAG_TRANSFER_COOLDOWN, 0);
     }
 
     protected function writeSaveData(CompoundTag $nbt) : void{
-        $this->saveItems($nbt);
-        $this->saveName($nbt);
+        parent::writeSaveData($nbt);
+        $nbt->setInt(self::TAG_TRANSFER_COOLDOWN, $this->transfer_cooldown);
+    }
 
-        $nbt->setInt(self::TAG_TRANSFER_COOLDOWN, $this->getTransferCooldown());
+    public function getTransferCooldown() : int{
+        return $this->transfer_cooldown;
+    }
+
+    public function setTransferCooldown($cooldown = 0) {
+        $this->transfer_cooldown = 0;
     }
 
     public function getCollectBoxes() : array{
         return $this->collectBoxes;
-    }
-
-    public function getTransferCooldown() : int{
-        // This won't get update every game tick!
-        return ($this->transfer_cooldown > 8 || $this->transfer_cooldown < 0) ? 0 : $this->transfer_cooldown;
-    }
-
-    public function setTransferCooldown(int $cooldown = 0) : void{
-        assert($cooldown >= 0 && $cooldown < 9);
-        $this->transfer_cooldown = $cooldown;
     }
 }

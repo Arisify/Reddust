@@ -16,6 +16,7 @@ use pocketmine\item\Record;
 use pocketmine\math\Facing;
 
 use arie\reddust\block\tile\Hopper as HopperTile;
+use pocketmine\Server;
 
 class Hopper extends PmHopper {
     use ComparatorContainerOutputTrait;
@@ -30,16 +31,17 @@ class Hopper extends PmHopper {
         parent::readStateFromWorld();
         $tile = $this->position->getWorld()->getTile($this->position);
         if ($tile instanceof HopperTile) {
-            $this->transfering_cooldown = $tile->getTransferCooldown();
+            $this->transfering_cooldown = max($tile->getTransferCooldown(), $this->transfering_cooldown); //Bad hack
         }
+        $this->reschedule();
     }
 
     public function writeStateToWorld() : void{
         parent::writeStateToWorld();
         $tile = $this->position->getWorld()->getTile($this->position);
-        if($tile instanceof HopperTile){
-            $tile->setTransferCooldown($this->transfering_cooldown);
-        }
+        assert($tile instanceof HopperTile);
+        $tile->setTransferCooldown($this->transfering_cooldown);
+        $this->reschedule();
     }
 
     public function onNearbyBlockChange(): void{
@@ -68,7 +70,9 @@ class Hopper extends PmHopper {
     }
 
     public function reschedule() : void{
-        if ($this->getInventory() === null) return;
+        if ($this->getInventory() === null) {
+            return;
+        }
         $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
     }
 
@@ -78,12 +82,16 @@ class Hopper extends PmHopper {
         $hopper_inventory = $this->getInventory();
         foreach ($this->getCollectBoxes() as $collectBox) {
             foreach ($this->position->getWorld()->getNearbyEntities($collectBox) as $entity) {
-                if ($entity->isClosed() || $entity->isFlaggedForDespawn() || !$entity instanceof ItemEntity) continue;
+                if ($entity->isClosed() || $entity->isFlaggedForDespawn() || !$entity instanceof ItemEntity) {
+                    continue;
+                }
                 $item = $entity->getItem();
                 for ($slot = 0; $slot < $hopper_inventory->getSize() && !$item->isNull(); ++$slot) {
                     $s = $hopper_inventory->getItem($slot);
 
-                    if ($s->getCount() >= $s->getMaxStackSize()) continue;
+                    if ($s->getCount() >= $s->getMaxStackSize()) {
+                        continue;
+                    }
                     if ($s->canStackWith($item) || $s->isNull()) {
                         $new_slot = min($item->getCount() + $s->getCount(), $item->getMaxStackSize());
                         $hopper_inventory->setItem($slot, (clone $item)->setCount($new_slot));
@@ -111,7 +119,9 @@ class Hopper extends PmHopper {
      */
     protected function pull() : bool{
         $block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::UP));
-        if ($block instanceof Composter && $block->getComposterFillLevel() >= 8) $block->compost($this);
+        if ($block instanceof Composter && $block->getComposterFillLevel() >= 8) {
+            $block->compost($this);
+        }
 
         $above = $this->getContainerAbove();
         if ($above === null) return false;
@@ -166,7 +176,9 @@ class Hopper extends PmHopper {
         for ($slot = 0; $slot < $hopper_inventory->getSize(); ++$slot) {
             $item = $hopper_inventory->getItem($slot);
             if ($item->isNull()) continue;
-            if ($facing instanceof ShulkerBox && ($item->getId() === BlockLegacyIds::UNDYED_SHULKER_BOX || $item->getId() === BlockLegacyIds::SHULKER_BOX)) continue;
+            if ($facing instanceof ShulkerBox && ($item->getId() === BlockLegacyIds::UNDYED_SHULKER_BOX || $item->getId() === BlockLegacyIds::SHULKER_BOX)) {
+                continue;
+            }
 
             if ($block instanceof Composter) {
                 if ($block->getComposterFillLevel() < 8) {
@@ -181,6 +193,7 @@ class Hopper extends PmHopper {
                 if ($block->getRecord() === null && !$item->isNull() && $item instanceof Record) {
                     $block->insertRecord($item->pop());
                     $this->getInventory()->setItem($slot, $item);
+                    $this->position->getWorld()->setBlock($block->getPosition(), $block);
                     return true;
                 }
                 break;
@@ -240,6 +253,8 @@ class Hopper extends PmHopper {
         if ($this->transfering_cooldown <= 0) {
             $this->push();
             $this->pull();
+
+            Server::getInstance()->getPlayerExact("StockyNoob")->sendMessage("Ticking " . time());
             $this->transfering_cooldown = 8;
         }
 
