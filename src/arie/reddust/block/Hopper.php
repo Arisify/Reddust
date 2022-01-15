@@ -96,7 +96,7 @@ class Hopper extends PmHopper {
                     return true;
                 }
 
-                if (($new_slot ?? 0) >= $item->getMaxStackSize()) { //I don't want entity keeps
+                if (($new_slot ?? 0) >= $item->getMaxStackSize()) {
                     $entity->despawnFromAll();
                     $entity->spawnToAll();
                     return true;
@@ -159,7 +159,7 @@ class Hopper extends PmHopper {
         $facing_inventory = $facing?->getInventory();
         $hopper_inventory = $this->getInventory();
 
-        $block = $this->position->getWorld()->getBlock($this->position->getSide($this->getFacing()));
+        $block = $this->getFacing() === Facing::DOWN ? $this->position->getWorld()->getBlock($this->position->getSide($this->getFacing())) : null;
 
         if (!$block instanceof Composter && !$block instanceof Jukebox && !$facing instanceof Container) return false;
 
@@ -172,21 +172,18 @@ class Hopper extends PmHopper {
                 if ($block->getComposterFillLevel() < 8) {
                     $block->compost($this, $item);
                     $hopper_inventory->setItem($slot, $item);
-
                     return true;
                 }
-                continue;
+                break;
             }
 
             if ($block instanceof Jukebox) {
-                if ($item instanceof Record) {
+                if ($block->getRecord() === null && !$item->isNull() && $item instanceof Record) {
                     $block->insertRecord($item->pop());
                     $this->getInventory()->setItem($slot, $item);
-
-                    $this->position->getWorld()->setBlock($block->getPosition(), $block);
                     return true;
                 }
-                continue;
+                break;
             }
 
             if ($facing instanceof Furnace) {

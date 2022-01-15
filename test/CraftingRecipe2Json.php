@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-/** use @link https://github.com/dktapps-pm-pl/Scripter to run this script */
-
 use pocketmine\block\VanillaBlocks;
 use pocketmine\crafting\FurnaceRecipe;
 use pocketmine\crafting\ShapelessRecipe;
@@ -14,50 +12,50 @@ use pocketmine\Server;
 
 class CraftingRecipe2Json{
 
-    /** @var string */
-    private string $saveFolder;
-
-    /** @var string */
-    private string $file;
-
     /** @var array|mixed */
     private mixed $recipes;
 
-    private Closure $itemSerializerFunc;
+    private ?Closure $itemSerializerFunc = null;
 
-    /**
-     * @throws JsonException
-     */
-    public function __construct(){
-        $scripter = Server::getInstance()->getPluginManager()->getPlugin("Scripter");
-
-        assert($scripter !== null, "Scripter is missing! Go download and install it from https://github.com/dktapps-pm-pl/Scripter");
-
-        $this->saveFolder = $scripter->getDataFolder();
-        $this->file = $this->saveFolder . "/recipes.json";
-        $this->loadRecipes();
+    public function __construct(
+        private string $filePath
+    ){
+        if (file_exists($this->filePath) && pathinfo($filePath, PATHINFO_EXTENSION) !== "json") {
+            Server::getInstance()->getLogger()->notice("File input is not a supported json format file!");
+        }
+        try {
+            $contents = @file_get_contents($filePath);
+            if (!$contents) $contents = "{}";
+            $recipes = json_decode($contents, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            Server::getInstance()->getLogger()->error("An issue occurred while trying to read data. Input data will be returned as an empty array!");
+            print($e->getMessage());
+            $recipes = [];
+        }
+        $this->recipes = $recipes;
         $this->itemSerializerFunc = static fn(Item $item) : array =>  $item->jsonSerialize();
     }
 
     /**
-     * @throws JsonException
+     * @throws ReflectionException
      */
-    public function loadRecipes() : void{
-        if (file_exists($this->file)) {
-            $this->recipes = @json_decode(file_get_contents($this->file), true, 512, JSON_THROW_ON_ERROR) ?? [];
-        } else {
-            $this->recipes = [];
-        }
-    }
-
     public function reflectProperty($class, string $property) {
-        $reflectionClass = new ReflectionClass($class::class);
+        try {
+            $reflectionClass = new ReflectionClass($class::class);
+        } catch (ReflectionException $e) {
+            Server::getInstance()->getLogger()->error($e->getMessage());
+            return null;
+        }
         /** @noinspection CallableParameterUseCaseInTypeContextInspection */
         $property = $reflectionClass->getProperty($property);
+        /** @var mixed $property */
         $property->setAccessible(true);
         return $property->getValue(clone $class);
     }
 
+    /**
+     * @throws ReflectionException
+     */
     public function registerShapedRecipe(ShapedRecipe $recipe, bool $priority = false) : void{
         $new_recipe = [
             "block" => "crafting_table",
@@ -66,8 +64,10 @@ class CraftingRecipe2Json{
             "output" => array_map($this->itemSerializerFunc, $recipe->getResults()),
             "priority" => (int) $priority
         ];
-        if (!in_array($new_recipe, $this->recipes, true)) {
+        if (!in_array($new_recipe, $this->recipes["shaped"], true)) {
             $this->recipes["shaped"][] = $new_recipe;
+        } else {
+            $this->recipes["shaped"][array_search($new_recipe, $this->recipes["shaped"], true)] = $new_recipe;
         }
     }
 
@@ -78,21 +78,27 @@ class CraftingRecipe2Json{
             "output" => array_map($this->itemSerializerFunc, $recipe->getResults()),
             "priority" => (int) $priority
         ];
-        if (!in_array($new_recipe, $this->recipes, true)) {
+        if (!in_array($new_recipe, $this->recipes["shapeless"], true)) {
             $this->recipes["shapeless"][] = $new_recipe;
+        } else {
+            $this->recipes["shapeless"][array_search($new_recipe, $this->recipes["shapeless"], true)] = $new_recipe;
         }
     }
 
     public function registerSmeltingRecipe(FurnaceRecipe $recipe, $furnaceType = ""): bool{
-        if ($furnaceType == "") return false;
+        if ($furnaceType === "") {
+            return false;
+        }
         $new_recipe = [
             "block" => $furnaceType,
             "input" => $recipe->getInput()->jsonSerialize(),
             "output" => $recipe->getResult()->jsonSerialize()
         ];
 
-        if (!in_array($new_recipe, $this->recipes, true)) {
-            $this->recipes["shapeless"][] = $new_recipe;
+        if (!in_array($new_recipe, $this->recipes["smelting"] ?? [], true){
+        $this->recipes["smelting"][] = $new_recipe;
+    } else {
+            $this->recipes["smelting"][array_search($new_recipe, $this->recipes["smelting"])] = $new_recipe;
         }
         return true;
     }
@@ -101,33 +107,44 @@ class CraftingRecipe2Json{
         // Todo
     }
 
-    /**
-     * @throws JsonException
-     */
-    public function saveRecipes(bool $multiline = true) : void{
-        if ($multiline) file_put_contents($this->file, json_encode($this->recipes, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT));
-        else file_put_contents($this->file, json_encode($this->recipes, JSON_THROW_ON_ERROR));
-        echo("File exported at: $this->file");
+    public function saveRecipes(string $filePath = "", bool $multiline = true) : bool{
+        if ($filePath === "") $filePath = $this->filePath;
+        if (file_exists($filePath)) {
+            Server::getInstance()->getLogger()->info("Overwriting current file: $filePath");
+        }
+
+        if (pathinfo($filePath, PATHINFO_EXTENSION) !== "json") {
+            Server::getInstance()->getLogger()->notice("File output is not a supported json format file!");
+        }
+
+        try {
+            file_put_contents($filePath, json_encode($this->recipes, JSON_THROW_ON_ERROR | ($multiline ? JSON_PRETTY_PRINT : 0)));
+        } catch (JsonException $e) {
+            Server::getInstance()->getLogger()->error("An error has occurred while attempting to process and store the data" . $e->getMessage());
+            return false;
+        }
+        Server::getInstance()->getLogger()->info("File exported at: $this->filePath");
+        return true;
     }
 }
 
-if (in_array(CraftingRecipe2Json::class, get_declared_classes())) {
-    $class = CraftingRecipe2Json();
-} else {
-    $class = new CraftingRecipe2Json();
+$class = new CraftingRecipe2Json(Server::getInstance()->getDataPath() . '/recipes.json');
+try {
+    $class->registerShapedRecipe(new ShapedRecipe(
+        [
+            'A A',
+            'ABA',
+            ' A '
+        ],
+        ['A' => ItemFactory::getInstance()->get(ItemIds::IRON_INGOT), 'B' => VanillaBlocks::CHEST()->asItem()],
+        [VanillaBlocks::HOPPER()->asItem()]
+    ));
+} catch (ReflectionException $e) {
+    //NOOP
 }
-
-$class->registerShapedRecipe(new ShapedRecipe(
-    [
-        'A A',
-        'ABA',
-        ' A '
-    ],
-    ['A' => ItemFactory::getInstance()->get(ItemIds::IRON_INGOT), 'B' => VanillaBlocks::CHEST()->asItem()],
-    [VanillaBlocks::HOPPER()->asItem()]
-));
 
 try {
     $class->saveRecipes();
 } catch (JsonException $e) {
+    //NOOP
 }

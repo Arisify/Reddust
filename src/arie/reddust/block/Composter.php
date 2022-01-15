@@ -18,6 +18,8 @@ use pocketmine\item\ItemIds;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
+use pocketmine\network\mcpe\protocol\SpawnParticleEffectPacket;
+use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\player\Player;
 use pocketmine\world\particle\HappyVillagerParticle;
 
@@ -33,6 +35,7 @@ use arie\reddust\world\sound\ComposterReadySound;
 
 class Composter extends Transparent {
     use ComparatorOutputTrait;
+    public const CROP_GROWTH_EMITTER_PARTICLE = "minecraft:crop_growth_emitter";
 
     /** @var int */
     protected int $composter_fill_level = 0;
@@ -83,6 +86,9 @@ class Composter extends Transparent {
         return true;
     }
 
+    /*
+     * This function is just to make
+     */
     public function pushCollidedEntities() : void{
         if ($this->composter_fill_level === 7) return;
         foreach (
@@ -95,8 +101,20 @@ class Composter extends Transparent {
             ) as $entity) {
             if ($entity instanceof Player || $entity instanceof Projectile) continue;
             $motion = $entity->getMotion();
-            $motion->y = 0.2; //Lower can make entity clip through the block :/
+            $motion->y = 0.2; //Lower can make entity clip through the block, the game cannot catch up the speed of the entity? :/
             $entity->setMotion($motion);
+        }
+    }
+
+    protected function spawnParticleEffect() {
+        $packet = SpawnParticleEffectPacket::create(
+            DimensionIds::OVERWORLD,
+            -1,
+            $this->position->add(0.5, 0.5, 0.5),
+            self::CROP_GROWTH_EMITTER_PARTICLE
+        );
+        foreach ($this->position->getWorld()->getViewersForPosition($this->position) as $player) {
+            $player->getNetworkSession()->sendDataPacket($packet);
         }
     }
 
@@ -110,7 +128,8 @@ class Composter extends Transparent {
             if ($event->isCancelled()) return false;
 
             $this->position->getWorld()->addSound($this->position, new ComposterEmptySound());
-            for ($i = 0; $i < 40; $i++) $this->position->getWorld()->addParticle($this->position->add(0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2, 0.5 + mt_rand(-1, 10) / 16, 0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2), new HappyVillagerParticle());
+            $this->spawnParticleEffect();
+            //for ($i = 0; $i < 40; $i++) $this->position->getWorld()->addParticle($this->position->add(0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2, 0.5 + mt_rand(-1, 10) / 16, 0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2), new HappyVillagerParticle());
 
             $block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::DOWN));
             if ($block instanceof Hopper) {
@@ -142,7 +161,8 @@ class Composter extends Transparent {
                     //$this->pushCollidedEntities();
                     $this->position->getWorld()->addSound($this->position, new ComposterFillSuccessSound());
                 }
-                for ($i = 0; $i < 30; $i++) $this->position->getWorld()->addParticle($this->position->add(0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2, ($this->composter_fill_level + mt_rand(2, 9)) / 16, 0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2), new HappyVillagerParticle());
+                $this->spawnParticleEffect();
+                //for ($i = 0; $i < 30; $i++) $this->position->getWorld()->addParticle($this->position->add(0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2, ($this->composter_fill_level + mt_rand(2, 9)) / 16, 0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2), new HappyVillagerParticle());
             } else {
                 $event = new ComposterFillEvent($origin, $this);
                 $event->call();
