@@ -22,7 +22,6 @@ use pocketmine\item\Potato;
 use pocketmine\item\PumpkinSeeds;
 use pocketmine\item\SweetBerries;
 use pocketmine\item\WheatSeeds;
-
 class ComposterUtils {
 
     protected static array $list = [];
@@ -31,7 +30,7 @@ class ComposterUtils {
         private $plugin
     ) {
         // region 30% percentage compost
-        self::register(new BeetrootSeeds(new ItemIdentifier(ItemIds::BEETROOT_SEEDS, 0), "Beetroot Seeds"));
+        self::registerAll(new BeetrootSeeds(new ItemIdentifier(ItemIds::BEETROOT_SEEDS, 0), "Beetroot Seeds"));
         self::register(new DriedKelp(new ItemIdentifier(ItemIds::DRIED_KELP, 0), "Dried Kelp"));
         //Todo: add glow berry (?:?)
         self::register(new ItemBlock(new ItemIdentifier(ItemIds::DOUBLE_PLANT, 0), VanillaBlocks::TALL_GRASS()));

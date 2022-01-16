@@ -21,20 +21,14 @@ use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\protocol\SpawnParticleEffectPacket;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\player\Player;
-use pocketmine\world\particle\HappyVillagerParticle;
 
-use arie\reddust\block\utils\ComparatorOutputTrait;
 use arie\reddust\block\utils\ComposterUtils;
-use arie\reddust\event\composter\ComposterEmptyEvent;
-use arie\reddust\event\composter\ComposterFillEvent;
-use arie\reddust\event\composter\ComposterReadyEvent;
 use arie\reddust\world\sound\ComposterEmptySound;
 use arie\reddust\world\sound\ComposterFillSound;
 use arie\reddust\world\sound\ComposterFillSuccessSound;
 use arie\reddust\world\sound\ComposterReadySound;
 
 class Composter extends Transparent {
-    use ComparatorOutputTrait;
     public const CROP_GROWTH_EMITTER_PARTICLE = "minecraft:crop_growth_emitter";
 
     /** @var int */
@@ -74,7 +68,7 @@ class Composter extends Transparent {
         return $this->composter_fill_level === 8;
     }
 
-    public function getComparatorOutput(): int{
+    public function getComposterFillLevel() : int{
         return $this->composter_fill_level;
     }
 
@@ -82,13 +76,14 @@ class Composter extends Transparent {
      * @throws \Exception
      */
     public function onInteract(Item $item, int $face, Vector3 $clickVector, ?Player $player = null): bool{
-        if ($player instanceof Player && !$player->isSneaking()) $this->compost($player, $item);
+        if ($player instanceof Player && !$player->isSneaking() && !$item->isNull()) {
+            if ($this->compost($player, clone $item)) {
+               $item->pop();
+            };
+        }
         return true;
     }
 
-    /*
-     * This function is just to make
-     */
     public function pushCollidedEntities() : void{
         if ($this->composter_fill_level === 7) return;
         foreach (
@@ -116,6 +111,12 @@ class Composter extends Transparent {
         foreach ($this->position->getWorld()->getViewersForPosition($this->position) as $player) {
             $player->getNetworkSession()->sendDataPacket($packet);
         }
+        /*
+        * No packet method:
+         for ($i = 1, $i <= mt_rand(12, 18); $i++) {
+            $this->position->getWorld()->addParticle($this->position->add(0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2, 0.5 + mt_rand(-1, 10) / 16, 0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2), new \pocketmine\world\particle\HappyVillagerParticle());
+         }
+       */
     }
 
     /**
@@ -123,54 +124,27 @@ class Composter extends Transparent {
      */
     public function compost(Block | Player $origin, ?Item $item = null) : bool{
         if ($this->composter_fill_level >= 8) {
-            $event = new ComposterEmptyEvent($origin, $this, [(new Item(new ItemIdentifier(351, 15), "Bone Meal"))->setCount(1)]);
-            $event->call();
-            if ($event->isCancelled()) return false;
-
+            $this->position->getWorld()->dropItem($this->position->add(0.5, 0.85, 0.5), new Fertilizer(new ItemIdentifier(351, 15), "Bone Meal"), new Vector3(0, 0, 0));
             $this->position->getWorld()->addSound($this->position, new ComposterEmptySound());
             $this->spawnParticleEffect();
-            //for ($i = 0; $i < 40; $i++) $this->position->getWorld()->addParticle($this->position->add(0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2, 0.5 + mt_rand(-1, 10) / 16, 0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2), new HappyVillagerParticle());
-
-            $block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::DOWN));
-            if ($block instanceof Hopper) {
-                $block->getInventory()->addItem(new Fertilizer(new ItemIdentifier(351, 15), "Bone Meal"));
-            } else {
-                $this->position->getWorld()->dropItem($this->position->add(0.5, 0.85, 0.5), new Fertilizer(new ItemIdentifier(351, 15), "Bone Meal"), new Vector3(sin(deg2rad(mt_rand(-15, 15))) / 100, sin(deg2rad(mt_rand(0, 15))/100), sin(deg2rad(mt_rand(-15, 15))) / 100));
-            }
-
             $this->composter_fill_level = 0;
         } else {
             if (!ComposterUtils::isCompostable($item)) return false;
-            $percent = ComposterUtils::getPercentage($item);
+            $this->spawnParticleEffect();
 
-            if (mt_rand(1, 100) <= $percent) {
-                $event = new ComposterFillEvent($origin, $this, true);
-                $event->call();
-                if ($event->isCancelled()) return false;
+            $percent = ComposterUtils::getPercentage($item);
+            if ($percent >= mt_rand(1, 100)) {
                 $this->pushCollidedEntities();
                 ++$this->composter_fill_level;
                 if ($this->composter_fill_level === 8) {
-                    $event = new ComposterReadyEvent($origin, $this);
-                    $event->call();
-                    if ($event->isCancelled()) {
-                        --$this->composter_fill_level; //Bad solution
-                        return false;
-                    }
                     $this->position->getWorld()->addSound($this->position, new ComposterReadySound());
                 } else {
-                    //$this->pushCollidedEntities();
                     $this->position->getWorld()->addSound($this->position, new ComposterFillSuccessSound());
                 }
-                $this->spawnParticleEffect();
-                //for ($i = 0; $i < 30; $i++) $this->position->getWorld()->addParticle($this->position->add(0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2, ($this->composter_fill_level + mt_rand(2, 9)) / 16, 0.5 - sin(deg2rad(mt_rand(-45, 45))) / 2), new HappyVillagerParticle());
             } else {
-                $event = new ComposterFillEvent($origin, $this);
-                $event->call();
-                if ($event->isCancelled()) return false;
-
                 $this->position->getWorld()->addSound($this->position, new ComposterFillSound());
+                return true;
             }
-            $item->pop();
         }
         $this->position->getWorld()->setBlock($this->position, $this);
         return true;
@@ -183,10 +157,6 @@ class Composter extends Transparent {
         ] : [
             (new Composter(new BlockIdentifier(BlockLegacyIds::COMPOSTER, 0), "Composter", new BlockBreakInfo(0.6, BlockToolType::AXE)))->asItem()
         ];
-    }
-
-    public function getComposterFillLevel() : int{
-        return $this->composter_fill_level;
     }
 
     public function getFlameEncouragement() : int{

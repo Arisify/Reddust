@@ -49,7 +49,7 @@ final class Loader extends PluginBase {
         $hopper = VanillaBlocks::HOPPER();
         TileFactory::getInstance()->register(HopperTile::class, ["Hopper", "minecraft:hopper"]);
         BlockFactory::getInstance()->register(new Hopper(new BlockIdentifier($hopper->getIdInfo()->getBlockId(), $hopper->getIdInfo()->getVariant(), $hopper->getIdInfo()->getItemId(), HopperTile::class), $hopper->getName(), $hopper->getBreakInfo()), true);
-        BlockFactory::getInstance()->register(new Composter(new BlockIdentifier(BlockLegacyIds::COMPOSTER, 0), "Composter", new BlockBreakInfo(2, BlockToolType::AXE))); //2 is my guessed number because wiki sucks! In vanilla, it seems
+         //2 is my guessed number because wiki sucks! In vanilla, it seems
     }
 
     public function registerCraftingRecipes() : void{
