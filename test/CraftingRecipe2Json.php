@@ -36,22 +36,6 @@ class CraftingRecipe2Json{
         $this->itemSerializerFunc = static fn(Item $item) : array =>  $item->jsonSerialize();
     }
 
-    /**
-     * @throws ReflectionException
-     */
-    public function reflectProperty($class, string $property) {
-        try {
-            $reflectionClass = new ReflectionClass($class::class);
-        } catch (ReflectionException $e) {
-            Server::getInstance()->getLogger()->error($e->getMessage());
-            return null;
-        }
-        /** @noinspection CallableParameterUseCaseInTypeContextInspection */
-        $property = $reflectionClass->getProperty($property);
-        /** @var mixed $property */
-        $property->setAccessible(true);
-        return $property->getValue(clone $class);
-    }
 
     /**
      * @throws ReflectionException
