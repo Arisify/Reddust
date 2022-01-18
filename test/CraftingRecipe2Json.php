@@ -114,7 +114,7 @@ class CraftingRecipe2Json{
         }
 
         if (pathinfo($filePath, PATHINFO_EXTENSION) !== "json") {
-            Server::getInstance()->getLogger()->notice("File output is not a supported json format file!");
+            Server::getInstance()->getLogger()->notice("File extension is supposed to be json format file!");
         }
 
         try {
