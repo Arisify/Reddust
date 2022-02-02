@@ -37,7 +37,7 @@ final class Loader extends PluginBase {
         TileFactory::getInstance()->register(DropperEntity::class, ["Dropper", "minecraft:dropper"]);
         BlockFactory::getInstance()->register(new Hopper(new BlockIdentifier($hopper->getIdInfo()->getBlockId(), $hopper->getIdInfo()->getVariant(), $hopper->getIdInfo()->getItemId(), HopperEntity::class), $hopper->getName(), $hopper->getBreakInfo()), true);
         BlockFactory::getInstance()->register(new Dropper(new BlockIdentifier(BlockLegacyIds::DROPPER, 0, ItemIds::DROPPER, DropperEntity::class), "Dropper", new BlockBreakInfo(3.5, BlockToolType::PICKAXE)));
-        BlockFactory::getInstance()->register(new Dispenser(new BlockIdentifier(BlockLegacyIds::DISPENSER, 0, ItemIds::DISPENSER, DispenserEntity::class), "Dropper", new BlockBreakInfo(3.5, BlockToolType::PICKAXE)));
+        BlockFactory::getInstance()->register(new Dispenser(new BlockIdentifier(BlockLegacyIds::DISPENSER, 0, ItemIds::DISPENSER, DispenserEntity::class), "Dispenser", new BlockBreakInfo(3.5, BlockToolType::PICKAXE)));
     }
 
 	protected function onEnable() : void {
