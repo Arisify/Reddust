@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace arie\reddust;
 
+use arie\reddust\listener\InventoryListener;
 use pocketmine\block\BlockBreakInfo;
 use pocketmine\block\BlockFactory;
 use pocketmine\block\BlockIdentifier;
@@ -37,6 +38,7 @@ final class Loader extends PluginBase {
 
 	protected function onEnable() : void {
 		$this->getLogger()->info("Nothing here!");
+        $this->getServer()->getPluginManager()->registerEvents(new InventoryListener(), $this);
 	}
 
 	public static function getInstance() : self {

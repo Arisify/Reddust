@@ -50,8 +50,8 @@ class Dropper extends Opaque {
     }
 
     public function getContainerFacing() : ?Container{
-        $facing = $this->position->getWorld()->getTile($this->position->getSide($this->getFacing()));
-        return ($facing instanceof Container && $this->getFacing() !== Facing::UP) ? $facing : null;
+        $facing = $this->position->getWorld()->getTile($this->position->getSide($this->facing));
+        return $facing instanceof Container ? $facing : null;
     }
 
     public function place(BlockTransaction $tx, Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, ?Player $player = null) : bool{
@@ -59,10 +59,9 @@ class Dropper extends Opaque {
             $dx = abs($player->getPosition()->getFloorX() - $this->position->x);
             $dy = $player->getPosition()->getFloorY() - $this->position->y;
             $dz = abs($player->getPosition()->getFloorZ() - $this->position->z);
-            $d = sqrt($dx ** 2 + $dz ** 2);
-            if ($dy > 0 && $d < 2) {
+            if ($dy > 0 && $dx < 2 && $dz < 2) {
                 $this->facing = Facing::UP;
-            } elseif ($dy < -1 && $d < 2) {
+            } elseif ($dy < -1 && $dx < 2 && $dz < 2) {
                 $this->facing = Facing::DOWN;
             } else {
                 $this->facing = Facing::opposite($player->getHorizontalFacing());
@@ -77,6 +76,8 @@ class Dropper extends Opaque {
     }
 
     public function drop() : bool{
+        var_dump(Facing::ALL);
+        print($this->facing);
         $inventory = $this->getInventory();
         $slot = $inventory->getRandomSlot();
         if ($slot === -1) {
@@ -104,13 +105,13 @@ class Dropper extends Opaque {
             return true;
         }
 
-        $v = mt_rand(0, 100) / 1000 + 0.2;
+        $v = (mt_rand(0, 100) / 1000 + 0.2) * (Facing::isPositive($this->facing) ? 1.0 : -1.0);
         $motion = new Vector3(
-            mt_rand(-100, 100) / 100 * 0.0075 * 6 + (Facing::axis($this->facing) === Axis::X ? 1.0 : 0.0) * $v * (Facing::isPositive($this->facing) ? 1.0 : -1.0),
-            mt_rand(-100, 100) / 100 * 0.0075 * 6 + 0.2,
-            mt_rand(-100, 100) / 100 * 0.0075 * 6 + (Facing::axis($this->facing) === Axis::Z ? 1.0 : 0.0) * $v * (Facing::isPositive($this->facing) ? 1.0 : -1.0),
+            mt_rand(-100, 100) / 100 * 0.0075 * 6 + (Facing::axis($this->facing) === Axis::X ? 1.0 : 0.0) * $v,
+            mt_rand(-100, 100) / 100 * 0.0075 * 6 + 0.15,
+            mt_rand(-100, 100) / 100 * 0.0075 * 6 + (Facing::axis($this->facing) === Axis::Z ? 1.0 : 0.0) * $v,
         );
-        $this->position->getWorld()->dropItem($this->position->getSide($this->facing)->add(0, 0.5, 0), $item->pop(), $motion);
+        $this->position->getWorld()->dropItem($this->position->add(0.5, 0.5, 0.5)->addVector(Vector3::zero()->getSide($this->facing)->multiply(0.55)), $item->pop(), $motion);
         $inventory->setItem($slot, $item);
         return true;
     }
