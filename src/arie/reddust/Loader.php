@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace arie\reddust;
 
+use arie\reddust\block\Dispenser;
+use arie\reddust\block\entity\DispenserEntity;
 use arie\reddust\listener\InventoryListener;
 use pocketmine\block\BlockBreakInfo;
 use pocketmine\block\BlockFactory;
@@ -31,9 +33,11 @@ final class Loader extends PluginBase {
     protected function registerBlocks() : void{
         $hopper = VanillaBlocks::HOPPER();
         TileFactory::getInstance()->register(HopperEntity::class, ["Hopper", "minecraft:hopper"]);
+        TileFactory::getInstance()->register(DispenserEntity::class, ["Dropper", "minecraft:dispenser"]);
         TileFactory::getInstance()->register(DropperEntity::class, ["Dropper", "minecraft:dropper"]);
         BlockFactory::getInstance()->register(new Hopper(new BlockIdentifier($hopper->getIdInfo()->getBlockId(), $hopper->getIdInfo()->getVariant(), $hopper->getIdInfo()->getItemId(), HopperEntity::class), $hopper->getName(), $hopper->getBreakInfo()), true);
         BlockFactory::getInstance()->register(new Dropper(new BlockIdentifier(BlockLegacyIds::DROPPER, 0, ItemIds::DROPPER, DropperEntity::class), "Dropper", new BlockBreakInfo(3.5, BlockToolType::PICKAXE)));
+        BlockFactory::getInstance()->register(new Dispenser(new BlockIdentifier(BlockLegacyIds::DISPENSER, 0, ItemIds::DISPENSER, DispenserEntity::class), "Dropper", new BlockBreakInfo(3.5, BlockToolType::PICKAXE)));
     }
 
 	protected function onEnable() : void {

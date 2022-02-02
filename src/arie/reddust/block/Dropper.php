@@ -72,12 +72,10 @@ class Dropper extends Opaque {
 
     public function onNearbyBlockChange(): void{
         parent::onNearbyBlockChange();
-        $this->drop();
+        $this->ejectItem();
     }
 
-    public function drop() : bool{
-        var_dump(Facing::ALL);
-        print($this->facing);
+    public function ejectItem() : bool{
         $inventory = $this->getInventory();
         $slot = $inventory->getRandomSlot();
         if ($slot === -1) {
@@ -105,7 +103,7 @@ class Dropper extends Opaque {
             return true;
         }
 
-        $v = (mt_rand(0, 100) / 1000 + 0.2) * (Facing::isPositive($this->facing) ? 1.0 : -1.0);
+        $v = (mt_rand(0, 100) / 1000 + 0.15) * (Facing::isPositive($this->facing) ? 1.0 : -1.0);
         $motion = new Vector3(
             mt_rand(-100, 100) / 100 * 0.0075 * 6 + (Facing::axis($this->facing) === Axis::X ? 1.0 : 0.0) * $v,
             mt_rand(-100, 100) / 100 * 0.0075 * 6 + 0.15,
