@@ -21,7 +21,6 @@ final class Loader extends PluginBase {
 		$hopper = VanillaBlocks::HOPPER();
 		TileFactory::getInstance()->register(HopperEntity::class, ["Hopper", "minecraft:hopper"]);
 		BlockFactory::getInstance()->register(new Hopper(new BlockIdentifier($hopper->getIdInfo()->getBlockId(), $hopper->getIdInfo()->getVariant(), $hopper->getIdInfo()->getItemId(), HopperEntity::class), $hopper->getName(), $hopper->getBreakInfo()), true);
-
 	}
 
 	protected function onEnable() : void {

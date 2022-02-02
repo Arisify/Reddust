@@ -12,7 +12,6 @@ use pocketmine\block\tile\Furnace;
 use pocketmine\block\tile\ShulkerBox;
 use pocketmine\entity\object\ItemEntity;
 use pocketmine\item\Record;
-use pocketmine\math\Axis;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
 
@@ -29,7 +28,7 @@ class Hopper extends PmHopper {
 		parent::readStateFromWorld();
 		$tile = $this->position->getWorld()->getTile($this->position);
 		if ($tile instanceof HopperEntity) {
-			$this->transfering_cooldown = max($tile->getTransferCooldown(), $this->transfering_cooldown); //Bad hack
+			$this->transfering_cooldown = max($tile->getTransferCooldown(), $this->transfering_cooldown);
 		}
 		$this->reschedule();
 	}
@@ -50,8 +49,7 @@ class Hopper extends PmHopper {
 	public function getCollectBoxes() : array{
 		return [
 			AxisAlignedBB::one()
-				->stretch(Axis::X, 3/16)
-				->stretch(Axis::Z, 3/16)
+                ->contract(3 / 16, 0, 3 / 16)
 				->trim(Facing::DOWN, 10/16),
 			AxisAlignedBB::one()
 				->offset(0, 1, 0)
@@ -75,9 +73,13 @@ class Hopper extends PmHopper {
 	}
 
 	public function reschedule() : void{
-		if ($this->getInventory() === null) {
-			return;
+        if (!$this->position->getWorld()->isChunkLoaded($this->position->getX() >> 4, $this->position->getZ() >> 4)) {
+            return;
 		}
+
+        if ($this->getInventory() === null) {
+            return;
+        }
 		$this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
 	}
 
@@ -122,8 +124,6 @@ class Hopper extends PmHopper {
 	}
 
 	protected function pull() : bool{
-		$block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::UP));
-
 		$above = $this->getContainerAbove();
 		if ($above === null) {
 			return false;
@@ -144,7 +144,9 @@ class Hopper extends PmHopper {
 
 		for ($slot = 0; $slot < $above_inventory->getSize(); ++$slot) {
 			$item = $above_inventory->getItem($slot);
-			if ($item->isNull()) continue;
+			if ($item->isNull()) {
+                continue;
+            }
 
 			for ($slot2 = 0; $slot2 < $hopper_inventory->getSize(); ++$slot2) {
 				$slotItem = $hopper_inventory->getItem($slot2);
@@ -153,7 +155,7 @@ class Hopper extends PmHopper {
 					break;
 				}
 
-				if ($slotItem->getCount() >= $slotItem->getMaxStackSize() || !$slotItem->canStackWith($item)) {
+				if (!$slotItem->canStackWith($item) || $slotItem->getCount() >= $slotItem->getMaxStackSize()) {
 					continue;
 				}
 
@@ -173,7 +175,7 @@ class Hopper extends PmHopper {
 
 		$block = $this->getFacing() === Facing::DOWN ? $this->position->getWorld()->getBlock($this->position->getSide($this->getFacing())) : null;
 
-		if (/*!$block instanceof Composter && */ !$block instanceof Jukebox && !$facing instanceof Container) {
+		if (!$block instanceof Jukebox && !$facing instanceof Container) {
 			return false;
 		}
 
@@ -187,17 +189,8 @@ class Hopper extends PmHopper {
 				continue;
 			}
 
-			/* if ($block instanceof Composter) {
-				if ($block->getComposterFillLevel() < 8) {
-					$block->compost($this, $item);
-					$hopper_inventory->setItem($slot, $item);
-					return true;
-				}
-				break;
-			} */
-
 			if ($block instanceof Jukebox) {
-				if ($block->getRecord() === null && !$item->isNull() && $item instanceof Record) {
+				if ($item instanceof Record && !$item->isNull() && $block->getRecord() === null) {
 					$block->insertRecord($item->pop());
 					$this->getInventory()->setItem($slot, $item);
 					$this->position->getWorld()->setBlock($block->getPosition(), $block);
@@ -232,7 +225,9 @@ class Hopper extends PmHopper {
 						break;
 					}
 
-					if ($slotItem->getCount() >= $slotItem->getMaxStackSize() || !$slotItem->canStackWith($item)) continue;
+					if (!$slotItem->canStackWith($item) || $slotItem->getCount() >= $slotItem->getMaxStackSize()) {
+                        continue;
+                    }
 
 					$facing_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
 					break;
@@ -246,7 +241,7 @@ class Hopper extends PmHopper {
 
 	public function onScheduledUpdate(): void {
 		parent::onScheduledUpdate();
-		if (!$this->position->getWorld()->isChunkLoaded($this->position->getX() >> 4, $this->position->getZ() >> 4) || $this->isPowered() || $this->getInventory() === null) {
+		if ($this->isPowered() || $this->getInventory() === null) {
 			$this->reschedule();
 			return;
 		}
