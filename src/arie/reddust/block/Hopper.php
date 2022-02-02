@@ -84,8 +84,12 @@ class Hopper extends PmHopper {
     protected function collect() : bool{
         $hopper_inventory = $this->getInventory();
         foreach ($this->getCollectBoxes() as $collectBox) {
-            foreach ($this->position->getWorld()->getNearbyEntities($collectBox->offset($this->position->x, $this->position->y, $this->position->z)) as $entity) {
-                if ($entity->isClosed() || $entity->isFlaggedForDespawn() || !$entity instanceof ItemEntity) {
+            foreach ($this->position->getWorld()->getNearbyEntities($collectBox->offset(
+                $this->position->x,
+                $this->position->y,
+                $this->position->z
+            )) as $entity) {
+                if (!$entity instanceof ItemEntity || $entity->isClosed() || $entity->isFlaggedForDespawn()) {
                     continue;
                 }
                 $item = $entity->getItem();
@@ -169,23 +173,28 @@ class Hopper extends PmHopper {
 
         $block = $this->getFacing() === Facing::DOWN ? $this->position->getWorld()->getBlock($this->position->getSide($this->getFacing())) : null;
 
-        if (!$block instanceof Composter && !$block instanceof Jukebox && !$facing instanceof Container) return false;
+        if (/*!$block instanceof Composter && */ !$block instanceof Jukebox && !$facing instanceof Container) {
+            return false;
+        }
 
         for ($slot = 0; $slot < $hopper_inventory->getSize(); ++$slot) {
             $item = $hopper_inventory->getItem($slot);
-            if ($item->isNull()) continue;
+            if ($item->isNull()) {
+                continue;
+            }
+
             if ($facing instanceof ShulkerBox && ($item->getId() === BlockLegacyIds::UNDYED_SHULKER_BOX || $item->getId() === BlockLegacyIds::SHULKER_BOX)) {
                 continue;
             }
 
-            if ($block instanceof Composter) {
+            /* if ($block instanceof Composter) {
                 if ($block->getComposterFillLevel() < 8) {
                     $block->compost($this, $item);
                     $hopper_inventory->setItem($slot, $item);
                     return true;
                 }
                 break;
-            }
+            } */
 
             if ($block instanceof Jukebox) {
                 if ($block->getRecord() === null && !$item->isNull() && $item instanceof Record) {
@@ -248,8 +257,6 @@ class Hopper extends PmHopper {
         if ($this->transfering_cooldown <= 0) {
             $this->push();
             $this->pull();
-
-            Server::getInstance()->getPlayerExact("StockyNoob")->sendMessage("Ticking " . time());
             $this->transfering_cooldown = 8;
         }
 

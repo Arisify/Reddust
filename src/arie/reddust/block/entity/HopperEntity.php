@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace arie\reddust\block\entity;
 
 use pocketmine\block\tile\Hopper;
-use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\world\World;
