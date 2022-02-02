@@ -77,11 +77,10 @@ class Hopper extends PmHopper {
             return;
 		}
 
-        if ($this->getInventory() === null) {
-            return;
+        if ($this->getInventory() !== null) {
+            $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
         }
-		$this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
-	}
+    }
 
 	protected function collect() : bool{
 		$hopper_inventory = $this->getInventory();
