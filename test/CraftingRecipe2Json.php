@@ -92,13 +92,8 @@ class CraftingRecipe2Json{
     }
 
     public function saveRecipes(string $filePath = "", bool $multiline = true) : bool{
-        if ($filePath === "") $filePath = $this->filePath;
-        if (file_exists($filePath)) {
-            Server::getInstance()->getLogger()->info("Overwriting current file: $filePath");
-        }
-
         if (pathinfo($filePath, PATHINFO_EXTENSION) !== "json") {
-            Server::getInstance()->getLogger()->notice("File extension is supposed to be json format file!");
+            Server::getInstance()->getLogger()->notice("Outout file extension is supposed to be JSON format file!");
         }
 
         try {
@@ -110,25 +105,4 @@ class CraftingRecipe2Json{
         Server::getInstance()->getLogger()->info("File exported at: $this->filePath");
         return true;
     }
-}
-
-$class = new CraftingRecipe2Json(Server::getInstance()->getDataPath() . '/recipes.json');
-try {
-    $class->registerShapedRecipe(new ShapedRecipe(
-        [
-            'A A',
-            'ABA',
-            ' A '
-        ],
-        ['A' => ItemFactory::getInstance()->get(ItemIds::IRON_INGOT), 'B' => VanillaBlocks::CHEST()->asItem()],
-        [VanillaBlocks::HOPPER()->asItem()]
-    ));
-} catch (ReflectionException $e) {
-    //NOOP
-}
-
-try {
-    $class->saveRecipes();
-} catch (JsonException $e) {
-    //NOOP
 }

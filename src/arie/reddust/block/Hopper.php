@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace arie\reddust\block;
 
-use arie\reddust\block\utils\ComparatorContainerOutputTrait;
 use pocketmine\block\BlockLegacyIds;
 use pocketmine\block\Hopper as PmHopper;
 use pocketmine\block\Jukebox;
@@ -13,14 +12,13 @@ use pocketmine\block\tile\Furnace;
 use pocketmine\block\tile\ShulkerBox;
 use pocketmine\entity\object\ItemEntity;
 use pocketmine\item\Record;
+use pocketmine\math\Axis;
+use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
 
-use arie\reddust\block\tile\Hopper as HopperTile;
-use pocketmine\Server;
+use arie\reddust\block\entity\HopperEntity;
 
 class Hopper extends PmHopper {
-    use ComparatorContainerOutputTrait;
-
     /** @var int */
     protected int $collecting_cooldown = 0;
 
@@ -30,7 +28,7 @@ class Hopper extends PmHopper {
     public function readStateFromWorld(): void{
         parent::readStateFromWorld();
         $tile = $this->position->getWorld()->getTile($this->position);
-        if ($tile instanceof HopperTile) {
+        if ($tile instanceof HopperEntity) {
             $this->transfering_cooldown = max($tile->getTransferCooldown(), $this->transfering_cooldown); //Bad hack
         }
         $this->reschedule();
@@ -39,7 +37,7 @@ class Hopper extends PmHopper {
     public function writeStateToWorld() : void{
         parent::writeStateToWorld();
         $tile = $this->position->getWorld()->getTile($this->position);
-        assert($tile instanceof HopperTile);
+        assert($tile instanceof HopperEntity);
         $tile->setTransferCooldown($this->transfering_cooldown);
         $this->reschedule();
     }
@@ -50,13 +48,20 @@ class Hopper extends PmHopper {
     }
 
     public function getCollectBoxes() : array{
-        $tile = $this->position->getWorld()->getTile($this->position);
-        return $tile instanceof HopperTile ? $tile->getCollectBoxes() : [];
+        return [
+            AxisAlignedBB::one()
+                ->stretch(Axis::X, 3/16)
+                ->stretch(Axis::Z, 3/16)
+                ->trim(Facing::DOWN, 10/16),
+            AxisAlignedBB::one()
+                ->offset(0, 1, 0)
+                ->trim(Facing::UP, 0.25)
+        ];
     }
 
     public function getInventory() : ?HopperInventory{
         $tile = $this->position->getWorld()->getTile($this->position);
-        return $tile instanceof HopperTile ? $tile->getInventory() : null;
+        return $tile instanceof HopperEntity ? $tile->getInventory() : null;
     }
 
     public function getContainerAbove() : ?Container{
@@ -75,8 +80,6 @@ class Hopper extends PmHopper {
         }
         $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
     }
-
-    /** @noinspection NotOptimalIfConditionsInspection */
 
     protected function collect() : bool{
         $hopper_inventory = $this->getInventory();
@@ -114,17 +117,13 @@ class Hopper extends PmHopper {
         return false;
     }
 
-    /**
-     * @throws \Exception
-     */
     protected function pull() : bool{
         $block = $this->position->getWorld()->getBlock($this->position->getSide(Facing::UP));
-        if ($block instanceof Composter && $block->getComposterFillLevel() >= 8) {
-            $block->compost($this);
-        }
 
         $above = $this->getContainerAbove();
-        if ($above === null) return false;
+        if ($above === null) {
+            return false;
+        }
 
         $above_inventory = $above->getInventory();
         $hopper_inventory = $this->getInventory();
@@ -150,7 +149,9 @@ class Hopper extends PmHopper {
                     break;
                 }
 
-                if ($slotItem->getCount() >= $slotItem->getMaxStackSize() || !$slotItem->canStackWith($item)) continue;
+                if ($slotItem->getCount() >= $slotItem->getMaxStackSize() || !$slotItem->canStackWith($item)) {
+                    continue;
+                }
 
                 $hopper_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
                 break;
@@ -161,9 +162,6 @@ class Hopper extends PmHopper {
         return false;
     }
 
-    /**
-     * @throws \Exception
-     */
     protected function push() : bool{
         $facing = $this->getContainerFacing();
         $facing_inventory = $facing?->getInventory();
@@ -237,9 +235,6 @@ class Hopper extends PmHopper {
         return false;
     }
 
-    /**
-     * @throws \Exception
-     */
     public function onScheduledUpdate(): void {
         parent::onScheduledUpdate();
         if (!$this->position->getWorld()->isChunkLoaded($this->position->getX() >> 4, $this->position->getZ() >> 4) || $this->isPowered() || $this->getInventory() === null) {
