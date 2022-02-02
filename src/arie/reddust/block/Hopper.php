@@ -46,10 +46,10 @@ class Hopper extends PmHopper {
 		$this->reschedule();
 	}
 
-	public function getCollectBoxes() : array{
+	public function getCollectingBoxes() : array{
 		return [
 			AxisAlignedBB::one()
-                ->contract(3 / 16, 0, 3 / 16)
+				->contract(3 / 16, 0, 3 / 16)
 				->trim(Facing::DOWN, 10/16),
 			AxisAlignedBB::one()
 				->offset(0, 1, 0)
@@ -73,18 +73,18 @@ class Hopper extends PmHopper {
 	}
 
 	public function reschedule() : void{
-        if (!$this->position->getWorld()->isChunkLoaded($this->position->getX() >> 4, $this->position->getZ() >> 4)) {
-            return;
+		if (!$this->position->getWorld()->isChunkLoaded($this->position->getX() >> 4, $this->position->getZ() >> 4)) {
+			return;
 		}
 
-        if ($this->getInventory() !== null) {
-            $this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
-        }
-    }
+		if ($this->getInventory() !== null) {
+			$this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
+		}
+	}
 
 	protected function collect() : bool{
 		$hopper_inventory = $this->getInventory();
-		foreach ($this->getCollectBoxes() as $collectBox) {
+		foreach ($this->getCollectingBoxes() as $collectBox) {
 			foreach ($this->position->getWorld()->getNearbyEntities($collectBox->offset(
 				$this->position->x,
 				$this->position->y,
@@ -144,8 +144,8 @@ class Hopper extends PmHopper {
 		for ($slot = 0; $slot < $above_inventory->getSize(); ++$slot) {
 			$item = $above_inventory->getItem($slot);
 			if ($item->isNull()) {
-                continue;
-            }
+				continue;
+			}
 
 			for ($slot2 = 0; $slot2 < $hopper_inventory->getSize(); ++$slot2) {
 				$slotItem = $hopper_inventory->getItem($slot2);
@@ -225,8 +225,8 @@ class Hopper extends PmHopper {
 					}
 
 					if (!$slotItem->canStackWith($item) || $slotItem->getCount() >= $slotItem->getMaxStackSize()) {
-                        continue;
-                    }
+						continue;
+					}
 
 					$facing_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
 					break;

@@ -5,7 +5,7 @@ namespace arie\reddust\circuit;
 use pocketmine\world\Position;
 
 class CircuitSceneGraph{
-    private $struct = [];
+    private array $struct = [];
     public function update(BlockSource $source) {
         return;
     }

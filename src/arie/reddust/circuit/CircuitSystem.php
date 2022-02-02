@@ -13,17 +13,8 @@ use pocketmine\world\World;
 use ArrayIterator;
 use LogicException;
 
-use muqsit\asynciterator\AsyncIterator;
-use muqsit\asynciterator\handler\AsyncForeachHandler;
-use muqsit\asynciterator\handler\AsyncForeachResult;
-
 final class CircuitSystem implements Listener{
     private static CircuitSceneGraph $graph;
-    /** @var AsyncIterator */
-    private $async_iterator;
-
-    /** @var AsyncForeachHandler<int, CircuitSystem>|null */
-    private $ticker;
 
     /* @var bool */
     private bool $hasBeenEvaluated;
@@ -160,7 +151,9 @@ final class CircuitSystem implements Listener{
 
     public function setStrength(Position $position, int $strength = 0) {
         $component = $this->circuit_graph->getBaseComponent($position);
-        if ($component instanceof Component) $component->setStrength($strength);
+        if ($component instanceof Component) {
+            $component->setStrength($strength);
+        }
     }
 
     public function updateDependencies(BlockSource $source) {
@@ -179,25 +172,5 @@ final class CircuitSystem implements Listener{
         }
         $this->circuit_graph->add($position, $new_component);
         return $this->circuit_graph->getFromPendingAdd($position);
-    }
-
-    public function tick() {
-
-        if($this->ticker !== null){
-            throw new LogicException("Tried scheduling multiple item entity tickers");
-        }
-
-        if($tick_rate > 0){
-            $this->ticker = $this->async_iterator->forEach(new ArrayIterator($this->entities), $per_tick, $tick_rate)->as(static function(int $id,  CircuitList $list) : AsyncForeachResult{
-                $list->update();
-                return AsyncForeachResult::CONTINUE();
-            })->onCompletion(function() : void{
-                $this->ticker = null;
-                $this->tick();
-            });
-            return true;
-        }
-
-        return false;
     }
 }
