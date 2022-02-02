@@ -84,7 +84,7 @@ class Hopper extends PmHopper {
     protected function collect() : bool{
         $hopper_inventory = $this->getInventory();
         foreach ($this->getCollectBoxes() as $collectBox) {
-            foreach ($this->position->getWorld()->getNearbyEntities($collectBox) as $entity) {
+            foreach ($this->position->getWorld()->getNearbyEntities($collectBox->offset($this->position->x, $this->position->y, $this->position->z)) as $entity) {
                 if ($entity->isClosed() || $entity->isFlaggedForDespawn() || !$entity instanceof ItemEntity) {
                     continue;
                 }
