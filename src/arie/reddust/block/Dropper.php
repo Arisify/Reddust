@@ -77,47 +77,11 @@ class Dropper extends Opaque {
 
     public function ejectItem() : bool{
         $inventory = $this->getInventory();
-        $rate = 0;
-        for ($i = 1; $i <= 10000; ++$i) {
-            $start = microtime(true);
-            $slot = $inventory->getRandomSlot();
-            $end = microtime(true);
-            $rate += $end - $start;
-        }
-        echo("Test0: " . sprintf('%0.25f', $rate/10000) . PHP_EOL);
-
-        $rate = 0;
-        for ($i = 1; $i <= 10000; ++$i) {
-            $start = microtime(true);
-            $slot1 = $inventory->getRandomSlot1();
-            $end = microtime(true);
-            $rate += $end - $start;
-        }
-        echo("Test1: " . sprintf('%0.25f', $rate/10000) . PHP_EOL);
-
-        $rate = 0;
-        for ($i = 1; $i <= 10000; ++$i) {
-            $start = microtime(true);
-            $slot2 = $inventory->getRandomSlot2();
-            $end = microtime(true);
-            $rate += $end - $start;
-        }
-        echo("Test2: " . sprintf('%0.25f', $rate/10000) . PHP_EOL);
-
-        $rate = 0;
-        for ($i = 1; $i <= 10000; ++$i) {
-            $start = microtime(true);
-            $slot3 = $inventory->getRandomSlot3();
-            $end = microtime(true);
-            $rate += $end - $start;
-        }
-        echo("Test3: " . sprintf('%0.25f', $rate/10000) . PHP_EOL);
-
-        echo(PHP_EOL . PHP_EOL);
-
+        $slot = $inventory->getRandomSlot();
         if ($slot === -1) {
             return false;
         }
+
         $item = $inventory->getItem($slot);
         $facing = $this->getContainerFacing();
         if ($facing !== null) {
