@@ -103,18 +103,12 @@ class Hopper extends PmHopper {
 					if ($s->canStackWith($item) || $s->isNull()) {
 						$new_slot = min($item->getCount() + $s->getCount(), $item->getMaxStackSize());
 						$hopper_inventory->setItem($slot, (clone $item)->setCount($new_slot));
-						$item->setCount($item->getCount() + $s->getCount() - $new_slot);
+                        $entity->setStackSize($item->getCount() + $s->getCount() - $new_slot);
 					}
 				}
 
 				if ($item->isNull()) {
 					$entity->flagForDespawn();
-					return true;
-				}
-
-				if (($new_slot ?? 0) >= $item->getMaxStackSize()) {
-					$entity->despawnFromAll();
-					$entity->spawnToAll();
 					return true;
 				}
 			}
