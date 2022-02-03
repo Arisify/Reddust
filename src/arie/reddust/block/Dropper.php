@@ -77,7 +77,44 @@ class Dropper extends Opaque {
 
     public function ejectItem() : bool{
         $inventory = $this->getInventory();
-        $slot = $inventory->getRandomSlot();
+        $start = 0;
+        $end = 0;
+        for ($i = 1; $i <= 1000; ++$i) {
+            $start += microtime(true);
+            $slot = $inventory->getRandomSlot();
+            $end += microtime(true);
+        }
+        echo("Test0: " . sprintf('%0.25f', $end/1000 - $start/1000) . PHP_EOL);
+
+        $start = 0;
+        $end = 0;
+        for ($i = 1; $i <= 1000; ++$i) {
+            $start += microtime(true);
+            $slot1 = $inventory->getRandomSlot1();
+            $end += microtime(true);
+        }
+        echo("Test1: " . sprintf('%0.25f', $end/1000 - $start/1000) . PHP_EOL);
+
+        $start = 0;
+        $end = 0;
+        for ($i = 1; $i <= 1000; ++$i) {
+            $start += microtime(true);
+            $slot2 = $inventory->getRandomSlot2();
+            $end += microtime(true);
+        }
+        echo("Test2: " . sprintf('%0.25f', $end/1000 - $start/1000) . PHP_EOL);
+
+        $start = 0;
+        $end = 0;
+        for ($i = 1; $i <= 1000; ++$i) {
+            $start += microtime(true);
+            $slot3 = $inventory->getRandomSlot3();
+            $end += microtime(true);
+        }
+        echo("Test3: " . sprintf('%0.25f', $end/1000 - $start/1000) . PHP_EOL);
+
+        echo(PHP_EOL . PHP_EOL);
+
         if ($slot === -1) {
             return false;
         }
