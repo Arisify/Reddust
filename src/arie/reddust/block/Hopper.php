@@ -82,7 +82,7 @@ class Hopper extends PmHopper {
 		}
 	}
 
-	protected function collect() : bool{
+	protected function collect(HopperInventory $inventory) : bool{
 		$hopper_inventory = $this->getInventory();
 		foreach ($this->getCollectingBoxes() as $collectBox) {
 			foreach ($this->position->getWorld()->getNearbyEntities($collectBox->offset(
@@ -103,7 +103,7 @@ class Hopper extends PmHopper {
 					if ($s->canStackWith($item) || $s->isNull()) {
 						$new_slot = min($item->getCount() + $s->getCount(), $item->getMaxStackSize());
 						$hopper_inventory->setItem($slot, (clone $item)->setCount($new_slot));
-                        $entity->setStackSize($item->getCount() + $s->getCount() - $new_slot);
+                        $item->setCount($item->getCount() + $s->getCount() - $new_slot);
 					}
 				}
 
@@ -112,51 +112,6 @@ class Hopper extends PmHopper {
 					return true;
 				}
 			}
-		}
-		return false;
-	}
-
-	protected function pull() : bool{
-		$above = $this->getContainerAbove();
-		if ($above === null) {
-			return false;
-		}
-
-		$above_inventory = $above->getInventory();
-		$hopper_inventory = $this->getInventory();
-
-		if ($above instanceof Furnace) {
-			$item = $above_inventory->getResult();
-			if ((!$item->isNull()) && $this->getInventory()->canAddItem($item)) {
-				$this->getInventory()->addItem($item->pop());
-				$above_inventory->setResult($item);
-				return true;
-			}
-			return false;
-		}
-
-		for ($slot = 0; $slot < $above_inventory->getSize(); ++$slot) {
-			$item = $above_inventory->getItem($slot);
-			if ($item->isNull()) {
-				continue;
-			}
-
-			for ($slot2 = 0; $slot2 < $hopper_inventory->getSize(); ++$slot2) {
-				$slotItem = $hopper_inventory->getItem($slot2);
-				if ($slotItem->isNull()) {
-					$hopper_inventory->setItem($slot2, $item->pop());
-					break;
-				}
-
-				if (!$slotItem->canStackWith($item) || $slotItem->getCount() >= $slotItem->getMaxStackSize()) {
-					continue;
-				}
-
-				$hopper_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
-				break;
-			}
-			$above_inventory->setItem($slot, $item);
-			return true;
 		}
 		return false;
 	}
@@ -185,7 +140,7 @@ class Hopper extends PmHopper {
 			if ($block instanceof Jukebox) {
 				if ($item instanceof Record && !$item->isNull() && $block->getRecord() === null) {
 					$block->insertRecord($item->pop());
-					$this->getInventory()->setItem($slot, $item);
+					$hopper_inventory->setItem($slot, $item);
 					$this->position->getWorld()->setBlock($block->getPosition(), $block);
 					return true;
 				}
@@ -234,17 +189,16 @@ class Hopper extends PmHopper {
 
 	public function onScheduledUpdate(): void {
 		parent::onScheduledUpdate();
-		if ($this->isPowered() || $this->getInventory() === null) {
-			$this->reschedule();
+        $inventory = $this->getInventory();
+		if ($inventory === null || $this->isPowered()) {
 			return;
 		}
 
-		$this->transfering_cooldown--;
-		$this->collecting_cooldown--;
-
 		if ($this->transfering_cooldown <= 0) {
-			$this->push();
-			$this->pull();
+			$facing = $this->getContainerFacing();
+			$above = $this->getContainerAbove();
+			$this->push($inventory, $facing->getInventory());
+			//$this->pull($inventory, $above->getInventory());
 			$this->transfering_cooldown = 8;
 		}
 
