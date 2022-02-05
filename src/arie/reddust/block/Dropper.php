@@ -110,8 +110,8 @@ class Dropper extends Opaque {
             mt_rand(-100, 100) / 100 * 0.0075 * 6 + 0.15,
             mt_rand(-100, 100) / 100 * 0.0075 * 6 + (Facing::axis($this->facing) === Axis::Z ? 1.0 : 0.0) * $v,
         );
-        //$this->position->getWorld()->dropItem($this->position->add(0.5, 0.5, 0.5)->addVector(Vector3::zero()->getSide($this->facing)->multiply(0.55)), $item->pop(), $motion);
-        //$inventory->setItem($slot, $item);
+        $this->position->getWorld()->dropItem($this->position->add(0.5, 0.5, 0.5)->addVector(Vector3::zero()->getSide($this->facing)->multiply(0.55)), $item->pop(), $motion);
+        $inventory->setItem($slot, $item);
         return true;
     }
 

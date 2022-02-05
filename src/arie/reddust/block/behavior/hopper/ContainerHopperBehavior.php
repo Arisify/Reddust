@@ -24,20 +24,19 @@ class ContainerHopperBehavior implements HopperBehavior {
 
 		    for ($slot2 = 0; $slot2 < $side_inventory->getSize(); ++$slot2) {
 			    $slotItem = $side_inventory->getItem($slot2);
-			    if ($slotItem->isNull()) {
-				    $side_inventory->setItem($slot2, $item->pop());
-				    break;
-			    }
 
 			    if (!$slotItem->canStackWith($item) || $slotItem->getCount() >= $slotItem->getMaxStackSize()) {
 				    continue;
 			    }
 
-			    $side_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
-			    break;
+			    if ($slotItem->isNull()) {
+				    $side_inventory->setItem($slot2, $item->pop());
+			    } else {
+				    $side_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
+			    }
+			    $inventory->setItem($slot, $item);
+				return true;
 		    }
-		    $inventory->setItem($slot, $item);
-		    return true;
 	    }
 	    return false;
     }
@@ -53,20 +52,18 @@ class ContainerHopperBehavior implements HopperBehavior {
 
 			for ($slot2 = 0; $slot2 < $inventory->getSize(); ++$slot2) {
 				$slotItem = $inventory->getItem($slot2);
-				if ($slotItem->isNull()) {
-					$inventory->setItem($slot2, $item->pop());
-					break;
-				}
-
 				if (!$slotItem->canStackWith($item) || $slotItem->getCount() >= $slotItem->getMaxStackSize()) {
 					continue;
 				}
 
-				$inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
-				break;
+				if ($slotItem->isNull()) {
+					$inventory->setItem($slot2, $item->pop());
+				} else {
+					$inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
+				}
+				$above_inventory->setItem($slot, $item);
+				return true;
 			}
-			$above_inventory->setItem($slot, $item);
-			return true;
 		}
 		return false;
 	}
