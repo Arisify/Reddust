@@ -6,33 +6,34 @@ use arie\reddust\block\entity\HopperEntity;
 use pocketmine\block\BlockLegacyIds;
 use pocketmine\block\tile\Container;
 use pocketmine\block\tile\ShulkerBox;
+use pocketmine\inventory\Inventory;
 
 class ContainerHopperBehavior implements HopperBehavior {
 
-    public function push(HopperEntity $hopper, ?Container $side = null) : bool{
+    public function push(HopperEntity $hopper, ?Inventory $facing = null) : bool{
 		$inventory = $hopper->getInventory();
-	    $side_inventory = $side->getInventory();
+	    $facing_inventory = $facing->getInventory();
 	    for ($slot = 0; $slot < $inventory->getSize(); ++$slot) {
 		    $item = $inventory->getItem($slot);
 		    if ($item->isNull()) {
 			    continue;
 		    }
 
-		    if ($side instanceof ShulkerBox && ($item->getId() === BlockLegacyIds::UNDYED_SHULKER_BOX || $item->getId() === BlockLegacyIds::SHULKER_BOX)) {
+		    if ($facing instanceof ShulkerBox && ($item->getId() === BlockLegacyIds::UNDYED_SHULKER_BOX || $item->getId() === BlockLegacyIds::SHULKER_BOX)) {
 			    continue;
 		    }
 
-		    for ($slot2 = 0; $slot2 < $side_inventory->getSize(); ++$slot2) {
-			    $slotItem = $side_inventory->getItem($slot2);
+		    for ($slot2 = 0; $slot2 < $facing_inventory->getSize(); ++$slot2) {
+			    $slotItem = $facing_inventory->getItem($slot2);
 
 			    if (!$slotItem->canStackWith($item) || $slotItem->getCount() >= $slotItem->getMaxStackSize()) {
 				    continue;
 			    }
 
 			    if ($slotItem->isNull()) {
-				    $side_inventory->setItem($slot2, $item->pop());
+				    $facing_inventory->setItem($slot2, $item->pop());
 			    } else {
-				    $side_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
+				    $facing_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
 			    }
 			    $inventory->setItem($slot, $item);
 				return true;

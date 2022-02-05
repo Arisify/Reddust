@@ -3,16 +3,16 @@ declare(strict_types=1);
 
 namespace arie\reddust\block\behavior\hopper;
 
-use pocketmine\block\inventory\HopperInventory;
+use arie\reddust\block\entity\HopperEntity;
 use pocketmine\block\tile\Container;
 
 class JukeboxHopperBehavior implements HopperBehavior{
 
-    public function pull(HopperInventory $inventory, ?Container $above = null) : bool{
+    public function pull(HopperEntity $hopper, ?Container $above = null) : bool{
         // TODO: Implement pull() method.
     }
 
-    public function push(HopperInventory $inventory, ?Container $facing = null) : bool{
+    public function push(HopperEntity $hopper, ?Container $facing = null) : bool{
         // TODO: Implement push() method.
     }
 }
