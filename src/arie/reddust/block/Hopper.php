@@ -2,34 +2,32 @@
 declare(strict_types=1);
 namespace arie\reddust\block;
 
-use pocketmine\block\BlockLegacyIds;
+use arie\reddust\block\behavior\hopper\ContainerHopperBehavior;
 use pocketmine\block\Hopper as PmHopper;
-use pocketmine\block\Jukebox;
 use pocketmine\block\inventory\HopperInventory;
 use pocketmine\block\tile\Container;
-use pocketmine\block\tile\Furnace;
-use pocketmine\block\tile\ShulkerBox;
+use pocketmine\entity\Entity;
 use pocketmine\entity\object\ItemEntity;
-use pocketmine\item\Record;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
 
 use arie\reddust\block\entity\HopperEntity;
 
 class Hopper extends PmHopper {
+	public const DEFAULT_COLLECTING_COOLDOWN = 8;
+	public const DEFAULT_TRANSFERING_COOLDOWN = 8;
 	/** @var int */
 	protected int $collecting_cooldown = 0;
 
 	/** @var int */
 	protected int $transfering_cooldown = 0;
 
-	public function readStateFromWorld(): void{
+	public function readStateFromWorld() : void{
 		parent::readStateFromWorld();
 		$tile = $this->position->getWorld()->getTile($this->position);
 		if ($tile instanceof HopperEntity) {
 			$this->transfering_cooldown = max($tile->getTransferCooldown(), $this->transfering_cooldown);
 		}
-		$this->reschedule();
 	}
 
 	public function writeStateToWorld() : void{
@@ -37,12 +35,36 @@ class Hopper extends PmHopper {
 		$tile = $this->position->getWorld()->getTile($this->position);
 		assert($tile instanceof HopperEntity);
 		$tile->setTransferCooldown($this->transfering_cooldown);
+	}
+
+	public function onNearbyBlockChange() : void{
+		parent::onNearbyBlockChange();
 		$this->reschedule();
 	}
 
-	public function onNearbyBlockChange(): void{
-		parent::onNearbyBlockChange();
-		$this->reschedule();
+	public function onEntityLand(Entity $entity) : ?float{
+		if ($entity instanceof ItemEntity) {
+			$this->reschedule();
+		}
+		return parent::onEntityLand($entity);
+	}
+
+	public function hasEntityCollision() : bool{
+		return true;
+	}
+
+	public function onEntityInside(Entity $entity) : bool{
+		if (($entity instanceof ItemEntity)) {
+			if ($this->collecting_cooldown <= 0) {
+				if ($this->collect()) {
+					$this->collecting_cooldown = self::DEFAULT_COLLECTING_COOLDOWN;
+					$this->reschedule();
+				}
+			} else {
+				$this->reschedule();
+			}
+		}
+		return parent::onEntityInside($entity);
 	}
 
 	public function getCollectingBoxes() : array{
@@ -75,14 +97,11 @@ class Hopper extends PmHopper {
 		if (!$this->position->getWorld()->isChunkLoaded($this->position->getX() >> 4, $this->position->getZ() >> 4)) {
 			return;
 		}
-
-		if ($this->getInventory() !== null) {
-			$this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
-		}
+		$this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
 	}
 
-	protected function collect(HopperInventory $inventory) : bool{
-		$hopper_inventory = $this->getInventory();
+	protected function collect() : bool{
+		$inventory = $this->getInventory();
 		foreach ($this->getCollectingBoxes() as $collectBox) {
 			foreach ($this->position->getWorld()->getNearbyEntities($collectBox->offset(
 				$this->position->x,
@@ -93,118 +112,68 @@ class Hopper extends PmHopper {
 					continue;
 				}
 				$item = $entity->getItem();
-				for ($slot = 0; $slot < $hopper_inventory->getSize() && !$item->isNull(); ++$slot) {
-					$s = $hopper_inventory->getItem($slot);
+				for ($slot = 0; $slot < $inventory->getSize() && !$item->isNull(); ++$slot) {
+					$s = $inventory->getItem($slot);
 
 					if ($s->getCount() >= $s->getMaxStackSize()) {
 						continue;
 					}
 					if ($s->canStackWith($item) || $s->isNull()) {
 						$new_slot = min($item->getCount() + $s->getCount(), $item->getMaxStackSize());
-						$hopper_inventory->setItem($slot, (clone $item)->setCount($new_slot));
+						$inventory->setItem($slot, (clone $item)->setCount($new_slot));
                         $item->setCount($item->getCount() + $s->getCount() - $new_slot);
 					}
 				}
-
-				if ($item->isNull()) {
-					$entity->flagForDespawn();
-					return true;
+				if ($item->getCount() > 0) {
+					$entity->setStackSize($item->getCount());
+					unset($item);
+					continue;
 				}
-			}
-		}
-		return false;
-	}
-
-	protected function push() : bool{
-		$facing = $this->getContainerFacing();
-		$facing_inventory = $facing?->getInventory();
-		$hopper_inventory = $this->getInventory();
-
-		$block = $this->getFacing() === Facing::DOWN ? $this->position->getWorld()->getBlock($this->position->getSide($this->getFacing())) : null;
-
-		if (!$block instanceof Jukebox && !$facing instanceof Container) {
-			return false;
-		}
-
-		for ($slot = 0; $slot < $hopper_inventory->getSize(); ++$slot) {
-			$item = $hopper_inventory->getItem($slot);
-			if ($item->isNull()) {
-				continue;
-			}
-
-			if ($facing instanceof ShulkerBox && ($item->getId() === BlockLegacyIds::UNDYED_SHULKER_BOX || $item->getId() === BlockLegacyIds::SHULKER_BOX)) {
-				continue;
-			}
-
-			if ($block instanceof Jukebox) {
-				if ($item instanceof Record && !$item->isNull() && $block->getRecord() === null) {
-					$block->insertRecord($item->pop());
-					$hopper_inventory->setItem($slot, $item);
-					$this->position->getWorld()->setBlock($block->getPosition(), $block);
-					return true;
-				}
+				$entity->flagForDespawn();
 				break;
 			}
-
-			if ($facing instanceof Furnace) {
-				if ($this->getFacing() === Facing::DOWN) {
-					$smelting = $facing_inventory->getSmelting();
-
-					if ($smelting->isNull() || ($item->equals($smelting) && $smelting->getCount() < $smelting->getMaxStackSize())) {
-						$facing_inventory->setSmelting((clone $item)->setCount(($smelting->getCount() ?? 0) + 1));
-						$hopper_inventory->setItem($slot, $item->setCount($item->getCount() - 1));
-						return true;
-					}
-				} else {
-					$fuel = $facing->getInventory()->getFuel();
-
-					if (!$fuel->isNull() ? $item->equals($fuel) && $fuel->getCount() < $fuel->getMaxStackSize() : $item->getFuelTime() > 0) {
-						$facing_inventory->setFuel((clone $item)->setCount(($fuel->getCount() ?? 0) + 1));
-						$hopper_inventory->setItem($slot, $item->setCount($item->getCount() - 1));
-						return true;
-					}
-				}
-			} else {
-				for ($slot2 = 0; $slot2 < $facing_inventory->getSize(); ++$slot2) {
-					$slotItem = $facing_inventory->getItem($slot2);
-					if ($slotItem->isNull()) {
-						$facing_inventory->setItem($slot2, $item->pop());
-						break;
-					}
-
-					if (!$slotItem->canStackWith($item) || $slotItem->getCount() >= $slotItem->getMaxStackSize()) {
-						continue;
-					}
-
-					$facing_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
-					break;
-				}
-				$hopper_inventory->setItem($slot, $item);
-				return true;
-			}
 		}
-		return false;
+		return isset($item);
 	}
 
 	public function onScheduledUpdate(): void {
 		parent::onScheduledUpdate();
-        $inventory = $this->getInventory();
-		if ($inventory === null || $this->isPowered()) {
+
+		$hopper = $this->position->getWorld()->getTile($this->position);
+		if (!$hopper instanceof HopperEntity || $this->isPowered()) {
 			return;
 		}
 
 		if ($this->transfering_cooldown <= 0) {
 			$facing = $this->getContainerFacing();
 			$above = $this->getContainerAbove();
-			$this->push($inventory, $facing->getInventory());
-			//$this->pull($inventory, $above->getInventory());
-			$this->transfering_cooldown = 8;
+			$facing_r = $facing !== null && (new ContainerHopperBehavior())->push($hopper, $facing);
+			$above_r = $above !== null && (new ContainerHopperBehavior())->pull($hopper, $above);
+			if ($facing_r || $above_r) {
+				$this->transfering_cooldown = self::DEFAULT_TRANSFERING_COOLDOWN;
+				$this->reschedule();
+
+				foreach(Facing::ALL as $face) {
+					$block = $this->position->getWorld()->getBlock($this->position->getSide($face));
+					if ($block instanceof self) {
+						$block->reschedule();
+					}
+				}
+			}
+
+		} else {
+			$this->transfering_cooldown--;
+			$this->reschedule();
 		}
 
 		if ($this->collecting_cooldown <= 0) {
-			$this->collect();
-			$this->collecting_cooldown = 8;
+			if ($this->collect()) {
+				$this->collecting_cooldown = self::DEFAULT_COLLECTING_COOLDOWN;
+				$this->reschedule();
+			}
+		} else {
+			$this->collecting_cooldown--;
+			$this->reschedule();
 		}
-		$this->reschedule();
 	}
 }

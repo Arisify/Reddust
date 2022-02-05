@@ -3,9 +3,7 @@ declare(strict_types=1);
 namespace arie\reddust\block\behavior\hopper;
 
 use pocketmine\block\Block;
-use pocketmine\block\BlockLegacyIds;
 use pocketmine\block\tile\Container;
-use pocketmine\block\tile\ShulkerBox;
 
 use arie\reddust\block\entity\HopperEntity;
 
@@ -21,24 +19,13 @@ class ContainerHopperBehavior implements HopperBehavior {
 				continue;
 			}
 
-			if ($facing instanceof ShulkerBox && ($item->getId() === BlockLegacyIds::UNDYED_SHULKER_BOX || $item->getId() === BlockLegacyIds::SHULKER_BOX)) {
-				continue;
-			}
-
 			for ($slot2 = 0; $slot2 < $facing_inventory->getSize(); ++$slot2) {
 				$slotItem = $facing_inventory->getItem($slot2);
-
-				if (!$slotItem->canStackWith($item) || $slotItem->getCount() >= $slotItem->getMaxStackSize()) {
-					continue;
+				if ($slotItem->isNull() || ($slotItem->canStackWith($item) && $slotItem->getCount() < $slotItem->getMaxStackSize())) {
+					$facing_inventory->setItem($slot2, $item->pop()->setCount(max($slotItem->getCount(), 0) + 1));
+					$inventory->setItem($slot, $item);
+					return $item->getCount() >= 0;
 				}
-
-				if ($slotItem->isNull()) {
-					$facing_inventory->setItem($slot2, $item->pop());
-				} else {
-					$facing_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
-				}
-				$inventory->setItem($slot, $item);
-				return true;
 			}
 		}
 		return false;
@@ -56,17 +43,11 @@ class ContainerHopperBehavior implements HopperBehavior {
 
 			for ($slot2 = 0; $slot2 < $inventory->getSize(); ++$slot2) {
 				$slotItem = $inventory->getItem($slot2);
-				if (!$slotItem->canStackWith($item) || $slotItem->getCount() >= $slotItem->getMaxStackSize()) {
-					continue;
+				if ($slotItem->isNull() || ($slotItem->canStackWith($item) && $slotItem->getCount() < $slotItem->getMaxStackSize())) {
+					$inventory->setItem($slot2, $item->pop()->setCount(max($slotItem->getCount(), 0) + 1));
+					$above_inventory->setItem($slot, $item);
+					return $item->getCount() >= 0;
 				}
-
-				if ($slotItem->isNull()) {
-					$inventory->setItem($slot2, $item->pop());
-				} else {
-					$inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
-				}
-				$above_inventory->setItem($slot, $item);
-				return true;
 			}
 		}
 		return false;
