@@ -1,15 +1,16 @@
 <?php
 declare(strict_types=1);
-
 namespace arie\reddust\block\behavior\hopper;
 
-use arie\reddust\block\entity\HopperEntity;
+use pocketmine\block\Block;
 use pocketmine\block\tile\Container;
 use pocketmine\block\tile\Furnace;
 
+use arie\reddust\block\entity\HopperEntity;
+
 class FurnaceHopperBehavior implements HopperBehavior{
 
-	public function push(HopperEntity $hopper, ?Container $facing = null, bool $isSmelting = true) : bool{
+	public function push(HopperEntity $hopper, Block|Container $facing, bool $isSmelting = true) : bool{
 		assert($facing instanceof Furnace);
 		$inventory = $hopper->getInventory();
 		$furnace_inventory = $facing->getInventory();
@@ -34,7 +35,7 @@ class FurnaceHopperBehavior implements HopperBehavior{
 		return false;
 	}
 
-	public function pull(HopperEntity $hopper, ?Container $above = null) : bool{
+	public function pull(HopperEntity $hopper, Block|Container $above) : bool{
 		assert($above instanceof Furnace);
 		$furnace_inventory = $above->getInventory();
 		$result = $furnace_inventory->getResult();

@@ -3,13 +3,13 @@ declare(strict_types=1);
 
 namespace arie\reddust\block\behavior\hopper;
 
-use arie\reddust\block\entity\HopperEntity;
+use pocketmine\block\Block;
 use pocketmine\block\tile\Container;
-use pocketmine\block\tile\Tile;
-use pocketmine\inventory\Inventory;
+
+use arie\reddust\block\entity\HopperEntity;
 
 interface HopperBehavior{
-    public function push(HopperEntity $hopper, ?Container $facing = null) : bool;
+    public function push(HopperEntity $hopper, Container|Block $facing) : bool;
 
-	public function pull(HopperEntity $hopper, ?Container $above = null) : bool;
+	public function pull(HopperEntity $hopper, Container|Block $above) : bool;
 }

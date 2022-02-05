@@ -1,48 +1,51 @@
 <?php
-
+declare(strict_types=1);
 namespace arie\reddust\block\behavior\hopper;
 
-use arie\reddust\block\entity\HopperEntity;
+use pocketmine\block\Block;
 use pocketmine\block\BlockLegacyIds;
 use pocketmine\block\tile\Container;
 use pocketmine\block\tile\ShulkerBox;
-use pocketmine\inventory\Inventory;
+
+use arie\reddust\block\entity\HopperEntity;
 
 class ContainerHopperBehavior implements HopperBehavior {
 
-    public function push(HopperEntity $hopper, ?Inventory $facing = null) : bool{
+	public function push(HopperEntity $hopper, Block|Container $facing) : bool{
+		assert($facing instanceof Container);
 		$inventory = $hopper->getInventory();
-	    $facing_inventory = $facing->getInventory();
-	    for ($slot = 0; $slot < $inventory->getSize(); ++$slot) {
-		    $item = $inventory->getItem($slot);
-		    if ($item->isNull()) {
-			    continue;
-		    }
+		$facing_inventory = $facing->getInventory();
+		for ($slot = 0; $slot < $inventory->getSize(); ++$slot) {
+			$item = $inventory->getItem($slot);
+			if ($item->isNull()) {
+				continue;
+			}
 
-		    if ($facing instanceof ShulkerBox && ($item->getId() === BlockLegacyIds::UNDYED_SHULKER_BOX || $item->getId() === BlockLegacyIds::SHULKER_BOX)) {
-			    continue;
-		    }
+			if ($facing instanceof ShulkerBox && ($item->getId() === BlockLegacyIds::UNDYED_SHULKER_BOX || $item->getId() === BlockLegacyIds::SHULKER_BOX)) {
+				continue;
+			}
 
-		    for ($slot2 = 0; $slot2 < $facing_inventory->getSize(); ++$slot2) {
-			    $slotItem = $facing_inventory->getItem($slot2);
+			for ($slot2 = 0; $slot2 < $facing_inventory->getSize(); ++$slot2) {
+				$slotItem = $facing_inventory->getItem($slot2);
 
-			    if (!$slotItem->canStackWith($item) || $slotItem->getCount() >= $slotItem->getMaxStackSize()) {
-				    continue;
-			    }
+				if (!$slotItem->canStackWith($item) || $slotItem->getCount() >= $slotItem->getMaxStackSize()) {
+					continue;
+				}
 
-			    if ($slotItem->isNull()) {
-				    $facing_inventory->setItem($slot2, $item->pop());
-			    } else {
-				    $facing_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
-			    }
-			    $inventory->setItem($slot, $item);
+				if ($slotItem->isNull()) {
+					$facing_inventory->setItem($slot2, $item->pop());
+				} else {
+					$facing_inventory->setItem($slot2, $item->pop()->setCount($slotItem->getCount() + 1));
+				}
+				$inventory->setItem($slot, $item);
 				return true;
-		    }
-	    }
-	    return false;
-    }
+			}
+		}
+		return false;
+	}
 
-	public function pull(HopperEntity $hopper, ?Container $above = null) : bool{
+	public function pull(HopperEntity $hopper, Block|Container $above) : bool{
+		assert($above instanceof Container);
 		$inventory = $hopper->getInventory();
 		$above_inventory = $above->getInventory();
 		for ($slot = 0; $slot < $above_inventory->getSize(); ++$slot) {
