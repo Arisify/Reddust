@@ -8,10 +8,12 @@ use pocketmine\block\inventory\HopperInventory;
 use pocketmine\block\tile\Container;
 use pocketmine\entity\Entity;
 use pocketmine\entity\object\ItemEntity;
+use pocketmine\item\Minecart;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
 
 use arie\reddust\block\entity\HopperEntity;
+use pocketmine\world\format\Chunk;
 
 class Hopper extends PmHopper {
 	public const DEFAULT_COLLECTING_COOLDOWN = 8;
@@ -26,7 +28,7 @@ class Hopper extends PmHopper {
 		parent::readStateFromWorld();
 		$tile = $this->position->getWorld()->getTile($this->position);
 		if ($tile instanceof HopperEntity) {
-			$this->transfering_cooldown = max($tile->getTransferCooldown(), $this->transfering_cooldown);
+			$this->transfering_cooldown = max($tile->getTransferCooldown() * 2, $this->transfering_cooldown);
 		}
 	}
 
@@ -34,7 +36,7 @@ class Hopper extends PmHopper {
 		parent::writeStateToWorld();
 		$tile = $this->position->getWorld()->getTile($this->position);
 		assert($tile instanceof HopperEntity);
-		$tile->setTransferCooldown($this->transfering_cooldown);
+		$tile->setTransferCooldown($this->transfering_cooldown / 2); //Mojang used redstone tick?
 	}
 
 	public function onNearbyBlockChange() : void{
@@ -99,16 +101,64 @@ class Hopper extends PmHopper {
 	}
 
 	public function testNew() { //Add a new system which only loop the inv once, the current system will loop the inv server time causing high server usage, quite hard, this might break the default behavior :c
-		$inventory = $this->getInventory();
-		for ($slot = 0; $slot < $inventory->getSize(); ++$slot) {
-			$slotItem = $inventory->getItem();
-			if ($this->transfering_cooldown <= 0) {
-				if ($slotItem->isNull()) {
+		$hopper = $this->position->getWorld()->getTile($this->position);
+		$above = $this->getContainerAbove();
+		$facing = $this->getContainerFacing();
+		if ($above === null) {
+			$itemList = [];
+			$minecartList = [];
+			foreach ($this->position->getWorld()->getChunkEntities($this->position->x >> Chunk::COORD_BIT_SIZE, $this->position->y >> Chunk::COORD_BIT_SIZE) as $entity) {
+				if ((!$entity instanceof ItemEntity && !$entity instanceof Minecart) || $entity->isClosed() || $entity->isFlaggedForDespawn()) {
+					continue;
+				}
+				foreach ($this->getCollectingBoxes() as $collectingBox) {
+					if ($entity->boundingBox->intersectsWith($collectingBox->offset(
+						$this->position->x,
+						$this->position->y,
+						$this->position->z
+					))) {
+						if ($entity instanceof ItemEntity) {
+							$itemList[$entity->getId()] = $entity;
+						}
+						if ($entity instanceof Minecart) {
+							$minecartList[$entity->getId()] = $entity;
+						}
+					}
 				}
 			}
-
+		}
+		$inventory = $this->getInventory();
+		for ($slot = 0; $slot < $inventory->getSize(); ++$slot) {
+			$slotItem = $inventory->getItem($slot);
 			if ($this->collecting_cooldown <= 0) {
+				if ($above === null) {
+					foreach ($itemList as $entity) {
+						$item = $entity->getItem();
+						if ($slotItem->isNull() || $slotItem->canStackWith($item)) {
+							$this->collecting_cooldown = self::DEFAULT_COLLECTING_COOLDOWN;
+							$total = $item->getCount() + $slotItem->getCount();
+							$inventory->setItem($slot, $item->setCount(min($total, $item->getMaxStackSize())));
+							$item->setCount($total - $item->getCount());
+						}
+						if ($item->getCount() > 0) {
+							$entity->setStackSize($item->getCount());
+							unset($item);
+							continue;
+						}
+						unset($itemList[$entity->getId()]);
+						$entity->flagForDespawn();
+						break;
+					}
+				}
+			} else {
+				--$this->collecting_cooldown;
+			}
 
+			if ($this->transfering_cooldown <= 0) {
+				$facing_r = $facing !== null && $this->push();
+				$above_r = $above !== null && $this->pull();
+			} else {
+				--$this->transfering_cooldown;
 			}
 		}
 	}
@@ -117,9 +167,6 @@ class Hopper extends PmHopper {
 		$inventory = $this->getInventory();
 		foreach ($this->getCollectingBoxes() as $collectBox) {
 			foreach ($this->position->getWorld()->getNearbyEntities($collectBox->offset(
-				$this->position->x,
-				$this->position->y,
-				$this->position->z
 			)) as $entity) {
 				if (!$entity instanceof ItemEntity || $entity->isClosed() || $entity->isFlaggedForDespawn()) {
 					continue;
