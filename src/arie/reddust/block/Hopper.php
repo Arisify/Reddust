@@ -100,6 +100,22 @@ class Hopper extends PmHopper {
 		$this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
 	}
 
+	public function testNew() { //Add a new system which only loop the inv once, the current system will loop the inv server time causing high server usage, quite hard, this might break the default behavior :c
+		$inventory = $this->getInventory();
+		for ($slot = 0; $slot < $inventory->getSize(); ++$slot) {
+			$slotItem = $inventory->getItem();
+			if ($this->transfering_cooldown <= 0) {
+				if ($slotItem->isNull()) {
+					//push()
+				}
+			}
+
+			if ($this->collecting_cooldown <= 0) {
+
+			}
+		}
+	}
+
 	protected function collect() : bool{ //This has unknown case that makes hopper stop ticking when collecting items entity?
 		$inventory = $this->getInventory();
 		foreach ($this->getCollectingBoxes() as $collectBox) {
@@ -115,13 +131,13 @@ class Hopper extends PmHopper {
 				for ($slot = 0; $slot < $inventory->getSize() && !$item->isNull(); ++$slot) {
 					$s = $inventory->getItem($slot);
 
-					if ($s->getCount() >= $s->getMaxStackSize()) {
+					if ($s->getCount() === $s->getMaxStackSize()) {
 						continue;
 					}
-					if ($s->canStackWith($item) || $s->isNull()) {
-						$new_slot = min($item->getCount() + $s->getCount(), $item->getMaxStackSize());
-						$inventory->setItem($slot, (clone $item)->setCount($new_slot));
-                        $item->setCount($item->getCount() + $s->getCount() - $new_slot);
+					if ($s->isNull() || $s->canStackWith($item)) {
+						$total = $item->getCount() + $s->getCount();
+						$inventory->setItem($slot, $item->setCount(min($total, $item->getMaxStackSize())));
+                        $item->setCount($total - $item->getCount());
 					}
 				}
 				if ($item->getCount() > 0) {
