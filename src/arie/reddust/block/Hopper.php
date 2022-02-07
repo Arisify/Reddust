@@ -100,7 +100,7 @@ class Hopper extends PmHopper {
 		$this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
 	}
 
-	protected function collect() : bool{
+	protected function collect() : bool{ //This has unknown case that makes hopper stop ticking when collecting items entity?
 		$inventory = $this->getInventory();
 		foreach ($this->getCollectingBoxes() as $collectBox) {
 			foreach ($this->position->getWorld()->getNearbyEntities($collectBox->offset(

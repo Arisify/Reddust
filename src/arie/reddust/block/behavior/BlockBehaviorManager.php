@@ -6,8 +6,4 @@ use pocketmine\utils\SingletonTrait;
 
 class BlockBehaviorManager{
 	use SingletonTrait;
-
-	public function __construct() {
-
-	}
 }
