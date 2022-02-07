@@ -70,11 +70,9 @@ class Hopper extends PmHopper {
 	public function getCollectingBoxes() : array{
 		return [
 			AxisAlignedBB::one()
-				->contract(3 / 16, 0, 3 / 16)
-				->trim(Facing::DOWN, 10/16),
-			AxisAlignedBB::one()
 				->offset(0, 1, 0)
 				->trim(Facing::UP, 0.25)
+				->extend(Facing::DOWN, 6 / 16)
 		];
 	}
 
@@ -106,7 +104,6 @@ class Hopper extends PmHopper {
 			$slotItem = $inventory->getItem();
 			if ($this->transfering_cooldown <= 0) {
 				if ($slotItem->isNull()) {
-					//push()
 				}
 			}
 
