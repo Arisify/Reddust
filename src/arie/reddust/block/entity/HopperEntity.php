@@ -6,7 +6,7 @@ namespace arie\reddust\block\entity;
 use pocketmine\block\tile\Hopper;
 use pocketmine\nbt\tag\CompoundTag;
 
-class HopperEntity extends Hopper {
+class HopperEntity extends Hopper{
 	public const TAG_TRANSFER_COOLDOWN = "TransferCooldown";
 	private int $transfer_cooldown = 0;
 
@@ -24,7 +24,7 @@ class HopperEntity extends Hopper {
 		return $this->transfer_cooldown;
 	}
 
-	public function setTransferCooldown($cooldown = 0): void{
+	public function setTransferCooldown($cooldown = 0) : void{
 		$this->transfer_cooldown = $cooldown;
 	}
 }

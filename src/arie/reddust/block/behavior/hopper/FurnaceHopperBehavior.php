@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+
 namespace arie\reddust\block\behavior\hopper;
 
 use pocketmine\block\Block;
@@ -45,7 +46,7 @@ class FurnaceHopperBehavior implements HopperBehavior{
 		$inventory = $hopper->getInventory();
 		for ($slot = 0; $slot < $inventory->getSize(); ++$slot) {
 			$slotItem = $inventory->getItem($slot);
-			if ($slotItem->isNull() || ($slotItem->canStackWith($result) && $slotItem->getCount() <  $slotItem->getMaxStackSize())) {
+			if ($slotItem->isNull() || ($slotItem->canStackWith($result) && $slotItem->getCount() < $slotItem->getMaxStackSize())) {
 				$inventory->setItem($slot, $result->pop()->setCount(max($result->getCount(), 0) + 1));
 				$furnace_inventory->setResult($result);
 				return true;

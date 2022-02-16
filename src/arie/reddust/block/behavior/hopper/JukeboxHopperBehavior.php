@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+
 namespace arie\reddust\block\behavior\hopper;
 
 use arie\reddust\block\entity\HopperEntity;

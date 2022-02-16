@@ -10,16 +10,16 @@ use pocketmine\network\mcpe\protocol\types\inventory\WindowTypes;
 use pocketmine\world\Position;
 
 class DropperInventory extends SimpleInventory implements BlockInventory, IWindowType{
-    use BlockInventoryTrait;
+	use BlockInventoryTrait;
 
-    public function __construct(Position $holder, int $size = 9){
-        $this->holder = $holder;
-        parent::__construct($size);
-    }
+	public function __construct(Position $holder, int $size = 9){
+		$this->holder = $holder;
+		parent::__construct($size);
+	}
 
-    public function getWindowType(): int{
-        return WindowTypes::DROPPER;
-    }
+	public function getWindowType() : int{
+		return WindowTypes::DROPPER;
+	}
 
 	public function getRandomSlot() : int{
 		$slots = [];

@@ -1,21 +1,20 @@
 <?php
 declare(strict_types=1);
+
 namespace arie\reddust\block;
 
-use arie\reddust\block\behavior\hopper\ContainerHopperBehavior;
 use pocketmine\block\Hopper as PmHopper;
 use pocketmine\block\inventory\HopperInventory;
 use pocketmine\block\tile\Container;
 use pocketmine\entity\Entity;
 use pocketmine\entity\object\ItemEntity;
-use pocketmine\item\Minecart;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
 
+use arie\reddust\block\behavior\hopper\ContainerHopperBehavior;
 use arie\reddust\block\entity\HopperEntity;
-use pocketmine\world\format\Chunk;
 
-class Hopper extends PmHopper {
+class Hopper extends PmHopper{
 	public const DEFAULT_COLLECTING_COOLDOWN = 8;
 	public const DEFAULT_TRANSFERING_COOLDOWN = 8;
 	/** @var int */
@@ -100,7 +99,7 @@ class Hopper extends PmHopper {
 		$this->position->getWorld()->scheduleDelayedBlockUpdate($this->position, 1);
 	}
 
-	public function testNew() { //Add a new system which only loop the inv once, the current system will loop the inv server time causing high server usage, quite hard, this might break the default behavior :c
+	/* public function testNew() { //Add a new system which only loop the inv once, the current system will loop the inv server time causing high server usage, quite hard, this might break the default behavior :c
 		$hopper = $this->position->getWorld()->getTile($this->position);
 		$above = $this->getContainerAbove();
 		$facing = $this->getContainerFacing();
@@ -134,6 +133,9 @@ class Hopper extends PmHopper {
 				if ($above === null) {
 					foreach ($itemList as $entity) {
 						$item = $entity->getItem();
+						if ($item->isNull()) {
+							continue;
+						}
 						if ($slotItem->isNull() || $slotItem->canStackWith($item)) {
 							$this->collecting_cooldown = self::DEFAULT_COLLECTING_COOLDOWN;
 							$total = $item->getCount() + $slotItem->getCount();
@@ -161,12 +163,15 @@ class Hopper extends PmHopper {
 				--$this->transfering_cooldown;
 			}
 		}
-	}
+	} */
 
 	protected function collect() : bool{ //This has unknown case that makes hopper stop ticking when collecting items entity?
 		$inventory = $this->getInventory();
 		foreach ($this->getCollectingBoxes() as $collectBox) {
 			foreach ($this->position->getWorld()->getNearbyEntities($collectBox->offset(
+				$this->position->x,
+				$this->position->y,
+				$this->position->z
 			)) as $entity) {
 				if (!$entity instanceof ItemEntity || $entity->isClosed() || $entity->isFlaggedForDespawn()) {
 					continue;
@@ -181,7 +186,7 @@ class Hopper extends PmHopper {
 					if ($s->isNull() || $s->canStackWith($item)) {
 						$total = $item->getCount() + $s->getCount();
 						$inventory->setItem($slot, $item->setCount(min($total, $item->getMaxStackSize())));
-                        $item->setCount($total - $item->getCount());
+						$item->setCount($total - $item->getCount());
 					}
 				}
 				if ($item->getCount() > 0) {
@@ -196,7 +201,7 @@ class Hopper extends PmHopper {
 		return isset($item);
 	}
 
-	public function onScheduledUpdate(): void {
+	public function onScheduledUpdate() : void{
 		parent::onScheduledUpdate();
 
 		$hopper = $this->position->getWorld()->getTile($this->position);
@@ -213,7 +218,7 @@ class Hopper extends PmHopper {
 				$this->transfering_cooldown = self::DEFAULT_TRANSFERING_COOLDOWN;
 				$this->reschedule();
 
-				foreach(Facing::ALL as $face) {
+				foreach (Facing::ALL as $face) {
 					$block = $this->position->getWorld()->getBlock($this->position->getSide($face));
 					if ($block instanceof self) {
 						$block->reschedule();

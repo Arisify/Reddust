@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+
 namespace arie\reddust\block\behavior\hopper;
 
 use pocketmine\block\Block;
@@ -7,7 +8,7 @@ use pocketmine\block\tile\Container;
 
 use arie\reddust\block\entity\HopperEntity;
 
-class ContainerHopperBehavior implements HopperBehavior {
+class ContainerHopperBehavior implements HopperBehavior{
 
 	public function push(HopperEntity $hopper, Block|Container $facing) : bool{
 		assert($facing instanceof Container);

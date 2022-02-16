@@ -10,7 +10,7 @@ use arie\reddust\block\entity\HopperEntity;
 
 interface HopperBehavior{
 
-    public function push(HopperEntity $hopper, Container|Block $facing) : bool;
+	public function push(HopperEntity $hopper, Container|Block $facing) : bool;
 
 	public function pull(HopperEntity $hopper, Container|Block $above) : bool;
 }

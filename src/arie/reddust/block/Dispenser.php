@@ -7,12 +7,8 @@ use arie\reddust\block\entity\DispenserEntity;
 use arie\reddust\block\inventory\DispenserInventory;
 
 class Dispenser extends Dropper{
-    public function getInventory() : ?DispenserInventory{
-        $tile = $this->position->getWorld()->getTile($this->position);
-        return $tile instanceof DispenserEntity ? $tile->getInventory() : null;
-    }
-
-    public function ejectItem() : bool{
-
-    }
+	public function getInventory() : ?DispenserInventory{
+		$tile = $this->position->getWorld()->getTile($this->position);
+		return $tile instanceof DispenserEntity ? $tile->getInventory() : null;
+	}
 }
